@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="keywords" content="逆向,网络安全,系统安全,Windows,Android,iOS,Reverse" />
+  <meta name="author" content="smallsun" />
+  <meta name="description" content="it&#39;s my life." />
+  
+  
+  <title>
+    
+      某P保护学习 
+      
+      
+      |
+    
+     smallsun&#39;s Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+    <link rel="icon" href="/images/favicon.png">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-245031966-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-245031966-1');
+    </script>
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 6.2.0"><link rel="alternate" href="/atom.xml" title="smallsun's Blog" type="application/atom+xml">
+</head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/avatar.png" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">smallsun</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/">
+          <a href="/">Home</a>
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          <a href="/tags/">Tags</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">某P保护学习</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+          2016-08-21 03:19:26
+        </span>
+        
+              <span class="post-tags">
+                <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                
+                <span class="span--tag mr-8">
+                  <a href="/tags/reverse/" title="reverse">
+                    #reverse
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <p>这个是在15年研究xx保护时记录的笔记，年代久远了。</p>
+<h2 id="双机调试"><a href="#双机调试" class="headerlink" title="双机调试"></a>双机调试</h2><p>X64首先Hook IoAllocateMdl，代码如下</p>
+<pre class="line-numbers language-none"><code class="language-none">PMDL MyIoAllocateMdl(
+    __in_opt PVOID  VirtualAddress,
+    __in ULONG  Length,
+    __in BOOLEAN  SecondaryBuffer,
+    __in BOOLEAN  ChargeQuota,
+    __inout_opt PIRP  Irp  OPTIONAL)
+&#123;
+    ULONG* KdEnteredDebugger &#x3D; (ULONG*)GetKdEnteredDebuggerAddress();
+    if (VirtualAddress &#x3D;&#x3D; KdEnteredDebugger)
+    &#123;
+        DbgPrint(&quot;[KdEnteredDebugger] address: %p\n&quot;, KdEnteredDebugger);
+        VirtualAddress &#x3D; (PUCHAR)KdEnteredDebugger + 0x30;  &#x2F;&#x2F;据观察，+0x30 的位置恒为0     
+    &#125;
+
+
+    &#x2F;&#x2F;KdDebuggerNotPresent也是一个判断是否是内核调试状态的标志
+    if (VirtualAddress &#x3D;&#x3D; &amp;KdDebuggerNotPresent)
+    &#123;
+        DbgPrint(&quot;[KdDebuggerNotPresent] address: %llx\n&quot;, &amp;KdDebuggerNotPresent);
+    &#125;
+
+    return old_IoAllocateMdl(VirtualAddress, Length, SecondaryBuffer, ChargeQuota, Irp);
+
+&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>StartSearchAddress就是搜索的开始位置，通过刚才的反汇编我们肯定特征码在0x500范围内，所以EndSearchAddress &#x3D; StartSearchAddress + 0x500;<br>下面就是一个循环一个字节一个字节的找，找到后memcpy_s(&amp;temp, 4, i + 3, 4);、<br>复制指令的后四个字节到temp；然后计算出KeServiceDescriptorTable的真实位置。<br>addr &#x3D; (ULONGLONG)temp + (ULONGLONG)i + 7;</p>
+<h2 id="调试权限清零"><a href="#调试权限清零" class="headerlink" title="调试权限清零"></a>调试权限清零</h2><p>我们先来看看ValidAccessMask的值。<br>通过NtCreateDebugObject来定位。</p>
+<p>uf  NtCreateDebugObject</p>
+<!-- ![](某P调试权限清零/1.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/1.png" class="">
+
+<p>地址为fffff800&#96;04011f40</p>
+<!-- ![](某P调试权限清零/2.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/2.png" class="">
+
+<p>第一个四字节就是_object_type的地址</p>
+<!-- ![](某P调试权限清零/3.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/3.png" class="">
+
+<p>我们想得到的ValidAccessMask存在TypeInfo中，偏移为0x40</p>
+<!-- ![](某P调试权限清零/4.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/4.png" class="">
+<p>由上图可以看出ValidAccessMask的默认值为0x1f000f，此值为0时OD将无法附加，测试一下看看，我们将ValidAccessMask修改为0</p>
+<!-- ![](某P调试权限清零/5.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/5.png" class="">
+
+<!-- ![](某P调试权限清零/6.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/6.png" class="">
+
+<p>进程已无法附加，可见ValidAccessMask的值的确对我们附加进程造成影响，参考资料得TP是循环的将ValidAccessMask清0，即得出解决方法，我们也开个定时器恢复ValidAccessMask的值。<br>写代码时候发现了许多问题。NtCreateDebugObject这个函数在SSDT中，而X64已经没有导出KeServiceDescriptorTable，这里参考了TA大的Win64驱动开发教程，代码拿来即可用，抱着学习的心态来，学习方法和原理，动手。<br>反汇编KiSystemCall64,这里是内核函数入口。</p>
+<p>uf KiSystemCall64，代码很多，贴出关键部分</p>
+<!-- ![](某P调试权限清零/7.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/7.png" class="">
+
+<p>特征码是：4c8d15c<br>内核代码开始的地址保存在C0000082寄存器中，读取这个寄存器也很方便，可用__readmsr()函数读取（MSR中文是特别寄存器块），<br>WinDbg测试看看。</p>
+<!-- ![](某P调试权限清零/8.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/8.png" class="">
+<p>地址相同。</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span>
+函数名称：GetKeServiceDescriptorTable64
+函数功能：得到GetKeServiceDescriptorTable64地址
+<span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">*</span><span class="token operator">/</span>
+ULONGLONG <span class="token function">GetKeServiceDescriptorTable64</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    PUCHAR StatrtSearchAddr <span class="token operator">=</span> <span class="token punctuation">(</span>PUCHAR<span class="token punctuation">)</span><span class="token function">__readmsr</span><span class="token punctuation">(</span><span class="token number">0xc0000082</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    PUCHAR EndSearchAddr <span class="token operator">=</span> StatrtSearchAddr <span class="token operator">+</span> <span class="token number">0x500</span><span class="token punctuation">;</span>
+    PUCHAR i <span class="token operator">=</span> <span class="token constant">NULL</span><span class="token punctuation">;</span>
+    UCHAR b1 <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> b2 <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> b3 <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    ULONG templong <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    ULONGLONG addr <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> StatrtSearchAddr<span class="token punctuation">;</span> i <span class="token operator">&lt;</span> EndSearchAddr<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span>
+    <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">MmIsAddressValid</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token function">MmIsAddressValid</span><span class="token punctuation">(</span>i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token function">MmIsAddressValid</span><span class="token punctuation">(</span>i <span class="token operator">+</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#123;</span>
+            b1 <span class="token operator">=</span> <span class="token operator">*</span>i<span class="token punctuation">;</span>
+            b2 <span class="token operator">=</span> <span class="token operator">*</span><span class="token punctuation">(</span>i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            b3 <span class="token operator">=</span> <span class="token operator">*</span><span class="token punctuation">(</span>i <span class="token operator">+</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token comment">//fffff800`01ad0772 4c8d15c7202300 lea r10,[nt!KeServiceDescriptorTable (fffff800`01d02840)]</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>b1 <span class="token operator">==</span> <span class="token number">0x4c</span> <span class="token operator">&amp;&amp;</span> b2 <span class="token operator">==</span> <span class="token number">0x8d</span> <span class="token operator">&amp;&amp;</span> b3 <span class="token operator">==</span> <span class="token number">0x15</span><span class="token punctuation">)</span>
+            <span class="token punctuation">&#123;</span>
+                <span class="token function">memcpy</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>templong<span class="token punctuation">,</span>i <span class="token operator">+</span> <span class="token number">3</span><span class="token punctuation">,</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                addr <span class="token operator">=</span> <span class="token punctuation">(</span>ULONGLONG<span class="token punctuation">)</span>templong <span class="token operator">+</span> <span class="token punctuation">(</span>ULONGLONG<span class="token punctuation">)</span>i <span class="token operator">+</span> <span class="token number">7</span><span class="token punctuation">;</span>
+                <span class="token keyword">return</span> addr<span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>具体实现参考代码。<br>接下来就是获取SSDT函数的地址了，获取地址需要得到函数的Index，方法也简单，也可通过工具获得，还是为了学知识，简单了解一下了。</p>
+<!-- ![](某P调试权限清零/9.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/9.png" class="">
+<p>Win7:<br>看框内代码几乎相同，唯一不同的就是第二行代码。（注：这里出了一些问题，在Win10上测试与Win7不同，后续继续研究。）<br>xxH即为Index，90h转为十进制为144。</p>
+<!-- ![](某P调试权限清零/10.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/10.png" class="">
+
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token comment">/************************************************************************
+函数名称：GetSSDTFunctionAddress
+函数功能：获得SSDT表地址
+参 数 ：ID号
+注意：计算方法 ServiceTableBase[index] >> 4 + ServiceTableBase
+************************************************************************/</span>
+ULONGLONG <span class="token function">GetSSDTFunctionAddress</span><span class="token punctuation">(</span>ULONG id<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    LONG dwtmp <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    PULONG ServiceTableBase <span class="token operator">=</span> <span class="token constant">NULL</span><span class="token punctuation">;</span>
+    PSYSTEM_SERVICE_TABLE ssdt <span class="token operator">=</span> <span class="token punctuation">(</span>PSYSTEM_SERVICE_TABLE<span class="token punctuation">)</span><span class="token function">GetKeServiceDescriptorTable64</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    ServiceTableBase <span class="token operator">=</span> <span class="token punctuation">(</span>PULONG<span class="token punctuation">)</span>ssdt<span class="token operator">-></span>ServiceTableBase<span class="token punctuation">;</span>
+    dwtmp <span class="token operator">=</span> ServiceTableBase<span class="token punctuation">[</span>id<span class="token punctuation">]</span><span class="token punctuation">;</span>
+    dwtmp <span class="token operator">=</span> dwtmp <span class="token operator">>></span> <span class="token number">4</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> dwtmp <span class="token operator">+</span> <span class="token punctuation">(</span>ULONGLONG<span class="token punctuation">)</span>ServiceTableBase<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>至此NtCreateDebugObject地址也得到。<br>接下来我们要取得ValidAccessMask的地址，还是用特征码定位的方式</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c">VOID <span class="token function">PassValidAccessMask</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    PUCHAR StartSearchAddress <span class="token operator">=</span> <span class="token punctuation">(</span>PUCHAR<span class="token punctuation">)</span><span class="token function">GetSSDTFunctionAddress</span><span class="token punctuation">(</span><span class="token number">144</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    pNtCreateDebugObject <span class="token operator">=</span> <span class="token punctuation">(</span>PVOID<span class="token punctuation">)</span><span class="token function">GetSSDTFunctionAddress</span><span class="token punctuation">(</span><span class="token number">144</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">DbgPrint</span><span class="token punctuation">(</span><span class="token string">"pNtCreateDebugObject:%p\n"</span><span class="token punctuation">,</span>pNtCreateDebugObject<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    pTargetAddr <span class="token operator">=</span> <span class="token punctuation">(</span>PVOID<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">(</span>ULONG64<span class="token punctuation">)</span>pNtCreateDebugObject<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">0x7c</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">DbgPrint</span><span class="token punctuation">(</span><span class="token string">"pTargetAddr:%p\n"</span><span class="token punctuation">,</span> pTargetAddr<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    PUCHAR EndSearchAddress <span class="token operator">=</span> StartSearchAddress <span class="token operator">+</span> <span class="token number">0x100</span><span class="token punctuation">;</span>
+    PUCHAR i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    UCHAR b1 <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> b2 <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> b3 <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    LONG temp <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    LONGLONG addr <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> StartSearchAddress<span class="token punctuation">;</span> i <span class="token operator">&lt;</span> EndSearchAddress<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span>
+    <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">MmIsAddressValid</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token function">MmIsAddressValid</span><span class="token punctuation">(</span>i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token function">MmIsAddressValid</span><span class="token punctuation">(</span>i <span class="token operator">+</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#123;</span>
+            b1 <span class="token operator">=</span> <span class="token operator">*</span>i<span class="token punctuation">;</span>
+            b2 <span class="token operator">=</span> <span class="token operator">*</span><span class="token punctuation">(</span>i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            b3 <span class="token operator">=</span> <span class="token operator">*</span><span class="token punctuation">(</span>i <span class="token operator">+</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>b1 <span class="token operator">==</span> <span class="token number">0x48</span> <span class="token operator">&amp;&amp;</span> b2 <span class="token operator">==</span> <span class="token number">0x8b</span> <span class="token operator">&amp;&amp;</span> b3 <span class="token operator">==</span> <span class="token number">0x15</span><span class="token punctuation">)</span>
+            <span class="token punctuation">&#123;</span>
+                <span class="token function">memcpy_s</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>temp<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> i <span class="token operator">+</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                addr <span class="token operator">=</span> <span class="token punctuation">(</span>LONGLONG<span class="token punctuation">)</span>temp <span class="token operator">+</span> <span class="token punctuation">(</span>LONGLONG<span class="token punctuation">)</span>i <span class="token operator">+</span> <span class="token number">7</span><span class="token punctuation">;</span>
+                <span class="token function">DbgPrint</span><span class="token punctuation">(</span><span class="token string">"ValidAccessMask:%llx\n"</span><span class="token punctuation">,</span> <span class="token operator">*</span><span class="token punctuation">(</span>ULONG <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">(</span>ULONGLONG <span class="token operator">*</span><span class="token punctuation">)</span>addr<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">0x40</span> <span class="token operator">+</span> <span class="token number">0x1C</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">*</span><span class="token punctuation">(</span>ULONG <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">(</span>ULONGLONG <span class="token operator">*</span><span class="token punctuation">)</span>addr<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">0x40</span> <span class="token operator">+</span> <span class="token number">0x1C</span><span class="token punctuation">)</span> <span class="token operator">=</span> <span class="token number">0x1f000f</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>至此全部完成，开个定时器修改ValidAccessMask的值就行了。</p>
+<!-- ![](某P调试权限清零/11.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/11.png" class="">
+<!-- ![](某P调试权限清零/12.png) -->
+<img src="/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/12.png" class="">
+<p>学习的还有很多，感谢TA大牛提供的Win64驱动编程基础教程与前辈们分享的文章。</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2016/06/16/%E6%9F%90CrackMe%E5%88%86%E6%9E%90/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>Prev</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+              2016-08-21 03:19:26
+            </span>
+            
+                  <span class="post-tags">
+                    <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                    
+                    <span class="span--tag mr-8">
+                      <a href="/tags/reverse/" title="reverse">
+                        #reverse
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2016/11/21/%E9%80%86%E5%90%91%E7%AC%94%E8%AE%B0-%E4%B8%80/" target="_self">
+                <span>Next</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">Contents</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%8C%E6%9C%BA%E8%B0%83%E8%AF%95"><span class="toc-text">双机调试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B0%83%E8%AF%95%E6%9D%83%E9%99%90%E6%B8%85%E9%9B%B6"><span class="toc-text">调试权限清零</span></a></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+  <div id="disqus_thread"></div>
+  <script>
+    /**
+    *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+    *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+    /*
+    var disqus_config = function () {
+    this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+    this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+    */
+    (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = 'https://smallsun107.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          <a title="github" target="_blank" rel="noopener" href="https://github.com/smallsun107">
+            <i class="iconfont icon-github"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a title="rss" href="/atom.xml">
+            <i class="iconfont icon-rss"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        Copyright © 2022 smallsun
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        Theme by Oranges | Powered by Hexo
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+          本站总访问量<span id="busuanzi_value_site_pv"></span>次
+        
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+          本站访客数<span id="busuanzi_value_site_uv"></span>人
+        
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+  <div class="search-icon tools-bar-item" id="search-icon">
+    <a href="javascript: void(0)">
+      <i class="iconfont icon-search"></i>
+    </a>
+  </div>
+
+  <div class="search-overlay hidden">
+    <div class="search-content" tabindex="0">
+      <div class="search-title">
+        <span class="search-icon-input">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-search"></i>
+          </a>
+        </span>
+        
+          <input type="text" class="search-input" id="search-input" placeholder="Search...">
+        
+        <span class="search-close-icon" id="search-close-icon">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-close"></i>
+          </a>
+        </span>
+      </div>
+      <div class="search-result" id="search-result"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var inputArea = document.querySelector("#search-input")
+    var searchOverlayArea = document.querySelector(".search-overlay")
+
+    inputArea.onclick = function() {
+      getSearchFile()
+      this.onclick = null
+    }
+
+    inputArea.onkeydown = function() {
+      if(event.keyCode == 13)
+        return false
+    }
+
+    function openOrHideSearchContent() {
+      let isHidden = searchOverlayArea.classList.contains('hidden')
+      if (isHidden) {
+        searchOverlayArea.classList.remove('hidden')
+        document.body.classList.add('hidden')
+        // inputArea.focus()
+      } else {
+        searchOverlayArea.classList.add('hidden')
+        document.body.classList.remove('hidden')
+      }
+    }
+
+    function blurSearchContent(e) {
+      if (e.target === searchOverlayArea) {
+        openOrHideSearchContent()
+      }
+    }
+
+    document.querySelector("#search-icon").addEventListener("click", openOrHideSearchContent, false)
+    document.querySelector("#search-close-icon").addEventListener("click", openOrHideSearchContent, false)
+    searchOverlayArea.addEventListener("click", blurSearchContent, false)
+
+    var searchFunc = function (path, search_id, content_id) {
+      'use strict';
+      var $input = document.getElementById(search_id);
+      var $resultContent = document.getElementById(content_id);
+      $resultContent.innerHTML = "<ul><span class='local-search-empty'>First search, index file loading, please wait...<span></ul>";
+      $.ajax({
+        // 0x01. load xml file
+        url: path,
+        dataType: "xml",
+        success: function (xmlResponse) {
+          // 0x02. parse xml file
+          var datas = $("entry", xmlResponse).map(function () {
+            return {
+              title: $("title", this).text(),
+              content: $("content", this).text(),
+              url: $("url", this).text()
+            };
+          }).get();
+          $resultContent.innerHTML = "";
+
+          $input.addEventListener('input', function () {
+            // 0x03. parse query to keywords list
+            var str = '<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length <= 0) {
+              return;
+            }
+            // 0x04. perform local searching
+            datas.forEach(function (data) {
+              var isMatch = true;
+              var content_index = [];
+              if (!data.title || data.title.trim() === '') {
+                data.title = "Untitled";
+              }
+              var orig_data_title = data.title.trim();
+              var data_title = orig_data_title.toLowerCase();
+              var orig_data_content = data.content.trim().replace(/<[^>]+>/g, "");
+              var data_content = orig_data_content.toLowerCase();
+              var data_url = data.url;
+              var index_title = -1;
+              var index_content = -1;
+              var first_occur = -1;
+              // only match artiles with not empty contents
+              if (data_content !== '') {
+                keywords.forEach(function (keyword, i) {
+                  index_title = data_title.indexOf(keyword);
+                  index_content = data_content.indexOf(keyword);
+
+                  if (index_title < 0 && index_content < 0) {
+                    isMatch = false;
+                  } else {
+                    if (index_content < 0) {
+                      index_content = 0;
+                    }
+                    if (i == 0) {
+                      first_occur = index_content;
+                    }
+                    // content_index.push({index_content:index_content, keyword_len:keyword_len});
+                  }
+                });
+              } else {
+                isMatch = false;
+              }
+              // 0x05. show search results
+              if (isMatch) {
+                str += "<li><a href='" + data_url + "' class='search-result-title'>" + orig_data_title + "</a>";
+                var content = orig_data_content;
+                if (first_occur >= 0) {
+                  // cut out 100 characters
+                  var start = first_occur - 20;
+                  var end = first_occur + 80;
+
+                  if (start < 0) {
+                    start = 0;
+                  }
+
+                  if (start == 0) {
+                    end = 100;
+                  }
+
+                  if (end > content.length) {
+                    end = content.length;
+                  }
+
+                  var match_content = content.substr(start, end);
+
+                  // highlight all keywords
+                  keywords.forEach(function (keyword) {
+                    var regS = new RegExp(keyword, "gi");
+                    match_content = match_content.replace(regS, "<span class=\"search-keyword\">" + keyword + "</span>");
+                  });
+
+                  str += "<p class=\"search-result-abstract\">" + match_content + "...</p>"
+                }
+                str += "</li>";
+              }
+            });
+            str += "</ul>";
+            if (str.indexOf('<li>') === -1) {
+              return $resultContent.innerHTML = "<ul><span class='local-search-empty'>No result<span></ul>";
+            }
+            $resultContent.innerHTML = str;
+          });
+        },
+        error: function(xhr, status, error) {
+          $resultContent.innerHTML = ""
+          if (xhr.status === 404) {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The search.xml file was not found, please refer to：<a href='https://github.com/zchengsite/hexo-theme-oranges#configuration' target='_black'>configuration</a><span></ul>";
+          } else {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The request failed, Try to refresh the page or try again later.<span></ul>";
+          }
+        }
+      });
+      $(document).on('click', '#search-close-icon', function() {
+        $('#search-input').val('');
+        $('#search-result').html('');
+      });
+    }
+
+    var getSearchFile = function() {
+        var path = "/search.xml";
+        searchFunc(path, 'search-input', 'search-result');
+    }
+  </script>
+
+
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + %E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0 + '&url=' + https%3A%2F%2Fblog.smallsun.online%2F2016%2F08%2F21%2F%25E6%259F%2590P%25E4%25BF%259D%25E6%258A%25A4%25E5%25AD%25A6%25E4%25B9%25A0%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://blog.smallsun.online/2016/08/21/%E6%9F%90P%E4%BF%9D%E6%8A%A4%E5%AD%A6%E4%B9%A0/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>

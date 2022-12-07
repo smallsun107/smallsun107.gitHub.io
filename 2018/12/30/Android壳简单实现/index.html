@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="keywords" content="逆向,网络安全,系统安全,Windows,Android,iOS,Reverse" />
+  <meta name="author" content="smallsun" />
+  <meta name="description" content="it&#39;s my life." />
+  
+  
+  <title>
+    
+      Android壳简单实现 
+      
+      
+      |
+    
+     smallsun&#39;s Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+    <link rel="icon" href="/images/favicon.png">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-245031966-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-245031966-1');
+    </script>
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 6.2.0"><link rel="alternate" href="/atom.xml" title="smallsun's Blog" type="application/atom+xml">
+</head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/avatar.png" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">smallsun</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/">
+          <a href="/">Home</a>
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          <a href="/tags/">Tags</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">Android壳简单实现</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+          2018-12-30 02:59:06
+        </span>
+        
+              <span class="post-tags">
+                <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                
+                <span class="span--tag mr-8">
+                  <a href="/tags/reverse/" title="reverse">
+                    #reverse
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <p>又一年要过完了，没有什么提高，总结一下学习过程的中的笔记。</p>
+<p>过时的技术，各位大佬请轻喷。</p>
+<h2 id="Dex加固"><a href="#Dex加固" class="headerlink" title="Dex加固"></a>Dex加固</h2><p>加壳程序工作流程：加密源程序APK文件，把加密后数据写入壳APK的Dex文件尾部并添加数据长度，修改Dex文件头部的checksum，signature，file_size字段，使用源程序AndroidMainfest.xml替换壳程序的AndroidMainfest.xml文件内容。</p>
+<p>脱壳程序工作流程：读取Dex文件末尾数据以及长度信息，解密数据保存文件，动态加载源APK。</p>
+<p>加壳程序：</p>
+<p>DEX文件头部结构如下：</p>
+<!-- ![](Android壳简单实现/1.png) -->
+<img src="/2018/12/30/Android%E5%A3%B3%E7%AE%80%E5%8D%95%E5%AE%9E%E7%8E%B0/1.png" class="">
+
+
+<p>修复CheckSum，CheckSum使用alder32算法校验除去magic，checksum以外的部分。</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">FixCheckSum</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span>buffer<span class="token punctuation">,</span> <span class="token class-name">size_t</span> nLen<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+ 
+    <span class="token keyword">long</span>  uCheckSum <span class="token operator">=</span> <span class="token function">adler32</span><span class="token punctuation">(</span>buffer <span class="token operator">+</span> <span class="token number">12</span><span class="token punctuation">,</span>nLen <span class="token operator">-</span> <span class="token number">12</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"new CheckSum is %02x\r\n"</span><span class="token punctuation">,</span>uCheckSum<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">memcpy</span><span class="token punctuation">(</span>buffer <span class="token operator">+</span> <span class="token number">8</span><span class="token punctuation">,</span><span class="token operator">&amp;</span>uCheckSum<span class="token punctuation">,</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span> 
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>修复Signature，Signature使用sha1计算除去 magic ,checksum 和 signature以外的部分。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@Override</span>
+ 
+    <span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">attachBaseContext</span><span class="token punctuation">(</span><span class="token class-name">Context</span> base<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+ 
+        <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">attachBaseContext</span><span class="token punctuation">(</span>base<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">File</span> odex <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getDir</span><span class="token punctuation">(</span><span class="token string">"test_odex"</span><span class="token punctuation">,</span> <span class="token constant">MODE_PRIVATE</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">File</span> libs <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getDir</span><span class="token punctuation">(</span><span class="token string">"test_lib"</span><span class="token punctuation">,</span> <span class="token constant">MODE_PRIVATE</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        odexPath <span class="token operator">=</span> odex<span class="token punctuation">.</span><span class="token function">getAbsolutePath</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        libPath <span class="token operator">=</span> libs<span class="token punctuation">.</span><span class="token function">getAbsolutePath</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        apkPath <span class="token operator">=</span> odexPath <span class="token operator">+</span> <span class="token string">"/test.apk"</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">i</span><span class="token punctuation">(</span><span class="token string">"smallsun"</span><span class="token punctuation">,</span> <span class="token string">"odexPath"</span> <span class="token operator">+</span> odexPath <span class="token operator">+</span> <span class="token string">"\r\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">i</span><span class="token punctuation">(</span><span class="token string">"smallsun"</span><span class="token punctuation">,</span> <span class="token string">"libPath"</span> <span class="token operator">+</span> libPath <span class="token operator">+</span> <span class="token string">"\r\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">i</span><span class="token punctuation">(</span><span class="token string">"smallsun"</span><span class="token punctuation">,</span> <span class="token string">"apkPath"</span> <span class="token operator">+</span> apkPath <span class="token operator">+</span> <span class="token string">"\r\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">File</span> apkFile <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">File</span><span class="token punctuation">(</span>apkPath<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>apkFile<span class="token punctuation">.</span><span class="token function">exists</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+ 
+            <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">i</span><span class="token punctuation">(</span><span class="token string">"smallsun"</span><span class="token punctuation">,</span> <span class="token string">"file is exists"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token keyword">return</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+ 
+            <span class="token comment">//创建APK</span>
+ 
+            apkFile<span class="token punctuation">.</span><span class="token function">createNewFile</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> dexData <span class="token operator">=</span> <span class="token function">readDexFromAPK</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">i</span><span class="token punctuation">(</span><span class="token string">"smallsun"</span><span class="token punctuation">,</span> <span class="token string">"decryptDexFile"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token function">decryptDexFile</span><span class="token punctuation">(</span>dexData<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token comment">//配置动态加载环境，获取主线程对象</span>
+ 
+            <span class="token class-name">Object</span> currentActivityThread <span class="token operator">=</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">invokeStaticMethod</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread"</span><span class="token punctuation">,</span><span class="token string">"currentActivityThread"</span><span class="token punctuation">,</span><span class="token keyword">new</span> <span class="token class-name">Class</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">,</span><span class="token keyword">new</span> <span class="token class-name">Object</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token class-name">String</span> packageName <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getPackageName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token class-name">ArrayMap</span> mPackage <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">ArrayMap</span><span class="token punctuation">)</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">getFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread"</span><span class="token punctuation">,</span>currentActivityThread<span class="token punctuation">,</span><span class="token string">"mPackages"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token class-name">WeakReference</span> wr <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">WeakReference</span><span class="token punctuation">)</span> mPackage<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>packageName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token comment">//创建被加壳APK的DexClassLoader对象  加载apk内的类和本地代码（c/c++代码）</span>
+ 
+            <span class="token class-name">DexClassLoader</span> dexClassLoader <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DexClassLoader</span><span class="token punctuation">(</span>apkPath<span class="token punctuation">,</span>odexPath<span class="token punctuation">,</span>libPath<span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token class-name">ClassLoader</span><span class="token punctuation">)</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">getFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.LoadedApk"</span><span class="token punctuation">,</span> wr<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"mClassLoader"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token comment">//把当前进程的DexClassLoader 设置成了被加壳apk的DexClassLoader</span>
+ 
+            <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">setFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.LoadedApk"</span><span class="token punctuation">,</span><span class="token string">"mClassLoader"</span><span class="token punctuation">,</span>wr<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>dexClassLoader<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">i</span><span class="token punctuation">(</span><span class="token string">"smallsun"</span><span class="token punctuation">,</span><span class="token string">"ClassLoader:"</span> <span class="token operator">+</span> dexClassLoader<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+ 
+                <span class="token class-name">Object</span> object <span class="token operator">=</span> dexClassLoader<span class="token punctuation">.</span><span class="token function">loadClass</span><span class="token punctuation">(</span><span class="token string">"com.apktest.MainActivity"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+                <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">i</span><span class="token punctuation">(</span><span class="token string">"smallsun"</span><span class="token punctuation">,</span> <span class="token string">"object : "</span> <span class="token operator">+</span> object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token punctuation">&#125;</span><span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+ 
+                <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">i</span><span class="token punctuation">(</span><span class="token string">"smallsun"</span><span class="token punctuation">,</span> <span class="token string">"activity:"</span> <span class="token operator">+</span> <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">getStackTraceString</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token punctuation">&#125;</span>
+ 
+        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+ 
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">RuntimeException</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+    <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>到这里为止已经实现了一个简单的壳了，但是一些APP会有Application类，这时还需要替换源程序的Application，代码如下。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">onCreate</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">i</span><span class="token punctuation">(</span><span class="token string">"smallsun"</span><span class="token punctuation">,</span> <span class="token string">"onCreate"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">String</span> appClassName <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+ 
+        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+ 
+            <span class="token class-name">ApplicationInfo</span> ai <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getPackageManager</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getApplicationInfo</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getPackageName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token class-name">PackageManager</span><span class="token punctuation">.</span><span class="token constant">GET_META_DATA</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token class-name">Bundle</span> bundle <span class="token operator">=</span> ai<span class="token punctuation">.</span>metaData<span class="token punctuation">;</span>
+ 
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>bundle <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> bundle<span class="token punctuation">.</span><span class="token function">containsKey</span><span class="token punctuation">(</span><span class="token string">"APPLICATION_CLASS_NAME"</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+ 
+                appClassName <span class="token operator">=</span> bundle<span class="token punctuation">.</span><span class="token function">getString</span><span class="token punctuation">(</span><span class="token string">"APPLICATION_CLASS_NAME"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+ 
+                <span class="token keyword">return</span><span class="token punctuation">;</span>
+ 
+            <span class="token punctuation">&#125;</span>
+ 
+        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">PackageManager<span class="token punctuation">.</span>NameNotFoundException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+ 
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+<span class="token comment">//有值的话调用该Applicaiton</span>
+ 
+        <span class="token class-name">Object</span> currentActivityThread <span class="token operator">=</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">invokeStaticMethod</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread"</span><span class="token punctuation">,</span> <span class="token string">"currentActivityThread"</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">Class</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">Object</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">Object</span> mBoundApplication <span class="token operator">=</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">getFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread"</span><span class="token punctuation">,</span> currentActivityThread<span class="token punctuation">,</span> <span class="token string">"mBoundApplication"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">Object</span> loadedApkInfo <span class="token operator">=</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">getFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread$AppBindData"</span><span class="token punctuation">,</span> mBoundApplication<span class="token punctuation">,</span> <span class="token string">"info"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">setFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.LoadedApk"</span><span class="token punctuation">,</span> <span class="token string">"mApplication"</span><span class="token punctuation">,</span> loadedApkInfo<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">Object</span> oldApplication <span class="token operator">=</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">getFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread"</span><span class="token punctuation">,</span> currentActivityThread<span class="token punctuation">,</span> <span class="token string">"mInitialApplication"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">ArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Application</span><span class="token punctuation">></span></span> mAllApplications <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">ArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Application</span><span class="token punctuation">></span></span><span class="token punctuation">)</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">getFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread"</span><span class="token punctuation">,</span> currentActivityThread<span class="token punctuation">,</span> <span class="token string">"mAllApplications"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        mAllApplications<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span>oldApplication<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">ApplicationInfo</span> appinfo_In_LoadedApk <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">ApplicationInfo</span><span class="token punctuation">)</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">getFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.LoadedApk"</span><span class="token punctuation">,</span> loadedApkInfo<span class="token punctuation">,</span> <span class="token string">"mApplicationInfo"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">ApplicationInfo</span> appinfo_In_AppBindData <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">ApplicationInfo</span><span class="token punctuation">)</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">getFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread$AppBindData"</span><span class="token punctuation">,</span> mBoundApplication<span class="token punctuation">,</span> <span class="token string">"appInfo"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        appinfo_In_LoadedApk<span class="token punctuation">.</span>className <span class="token operator">=</span> appClassName<span class="token punctuation">;</span>
+ 
+        appinfo_In_AppBindData<span class="token punctuation">.</span>className <span class="token operator">=</span> appClassName<span class="token punctuation">;</span>
+ 
+        <span class="token class-name">Application</span> app <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Application</span><span class="token punctuation">)</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">invokeMethod</span><span class="token punctuation">(</span><span class="token string">"android.app.LoadedApk"</span><span class="token punctuation">,</span> <span class="token string">"makeApplication"</span><span class="token punctuation">,</span> loadedApkInfo<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">Class</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">&#123;</span><span class="token keyword">boolean</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span> <span class="token class-name">Instrumentation</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">&#125;</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">Object</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">&#123;</span><span class="token boolean">false</span><span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">setFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread"</span><span class="token punctuation">,</span> <span class="token string">"mInitialApplication"</span><span class="token punctuation">,</span> currentActivityThread<span class="token punctuation">,</span> app<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">ArrayMap</span> mProviderMap <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">ArrayMap</span><span class="token punctuation">)</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">getFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread"</span><span class="token punctuation">,</span> currentActivityThread<span class="token punctuation">,</span> <span class="token string">"mProviderMap"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token class-name">Iterator</span> it <span class="token operator">=</span> mProviderMap<span class="token punctuation">.</span><span class="token function">values</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token keyword">while</span> <span class="token punctuation">(</span>it<span class="token punctuation">.</span><span class="token function">hasNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+ 
+            <span class="token class-name">Object</span> providerClientRecord <span class="token operator">=</span> it<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token class-name">Object</span> localProvider <span class="token operator">=</span> <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">getFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.app.ActivityThread$ProviderClientRecord"</span><span class="token punctuation">,</span> providerClientRecord<span class="token punctuation">,</span> <span class="token string">"mLocalProvider"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token class-name">RefInvoke</span><span class="token punctuation">.</span><span class="token function">setFieldOjbect</span><span class="token punctuation">(</span><span class="token string">"android.content.ContentProvider"</span><span class="token punctuation">,</span> <span class="token string">"mContext"</span><span class="token punctuation">,</span> localProvider<span class="token punctuation">,</span> app<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        app<span class="token punctuation">.</span><span class="token function">onCreate</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>至此实现了一个壳的雏形，测试一下效果。</p>
+<p>加密源APK生成新dex文件</p>
+<!-- ![](Android壳简单实现/2.png) -->
+<img src="/2018/12/30/Android%E5%A3%B3%E7%AE%80%E5%8D%95%E5%AE%9E%E7%8E%B0/2.png" class="">
+
+<p>把新dex文件放入壳Apk中，重新签名，安装程序,启动程序，通过log可以看见执行了源APK中的代码。</p>
+<!-- ![](Android壳简单实现/3.png) -->
+<img src="/2018/12/30/Android%E5%A3%B3%E7%AE%80%E5%8D%95%E5%AE%9E%E7%8E%B0/3.png" class="">
+
+<p>再说一下实现过程中发现的一些问题，在java层进行解密及动态加载过程很容易被反编译，反编译后的伪代码与源码几乎没差，可以清楚的看出壳的运行逻辑，同时还会释放出源apk文件存放在本地。这时需要把关键代码移植到Native层，同时在内存中加载文件，这里就不多说了可以看代码，为了偷懒部分代码还是在java实现，完全可以把attachBaseContext和onCreate用native实现。</p>
+<h2 id="So加固"><a href="#So加固" class="headerlink" title="So加固"></a>So加固</h2><p>一）通过加密节的方式加密</p>
+<p>解密程序流程：通过__attribute__((section(“.mytext”)))属性将要加密的函数定义在.mytext节中，实现解密函数，添加__attribute__((constructor))属性，将代码定义在.init_array段。</p>
+<p>　解密函数的实现很简单，这里首先在getLibAddr函数中通过&#x2F;proc&#x2F;<pid>&#x2F;maps文件获得加载的so文件路径和基址，通过ehdr-&gt;e_entry这个变量获取到被加密节的大小，ehdr-&gt;e_shoff获得加密节的地址偏移解密数据。</p>
+<p>代码如下：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">extern</span> <span class="token string">"C"</span> JNIEXPORT
+ 
+<span class="token comment">//替换成自定义section的名字</span>
+ 
+jint JNICALL <span class="token function">Java_home_com_sotest_MainActivity_Add</span><span class="token punctuation">(</span>JNIEnv <span class="token operator">*</span>env<span class="token punctuation">,</span> jobject obj<span class="token punctuation">)</span>  <span class="token function">__attribute__</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token function">section</span><span class="token punctuation">(</span><span class="token string">".mytext"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+jint JNICALL <span class="token function">Java_home_com_sotest_MainActivity_Add</span><span class="token punctuation">(</span>JNIEnv <span class="token operator">*</span>env<span class="token punctuation">,</span> jobject obj<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Call Add Func!\r\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">return</span> <span class="token punctuation">(</span>jint<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+<span class="token punctuation">&#125;</span>
+ 
+    <span class="token keyword">unsigned</span> <span class="token keyword">int</span> <span class="token function">GetLibAddr</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+ 
+<span class="token punctuation">&#123;</span>
+ 
+    <span class="token keyword">char</span> <span class="token operator">*</span>szName <span class="token operator">=</span> <span class="token string">"libnative-lib.so"</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">int</span> nPid <span class="token operator">=</span> <span class="token function">getpid</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">unsigned</span> <span class="token keyword">int</span> nBase <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">char</span> buffer<span class="token punctuation">[</span><span class="token number">1024</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">&#123;</span><span class="token number">0</span><span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">sprintf</span><span class="token punctuation">(</span>buffer<span class="token punctuation">,</span><span class="token string">"/proc/%d/maps"</span><span class="token punctuation">,</span>nPid<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    FILE <span class="token operator">*</span>fp <span class="token operator">=</span> <span class="token function">fopen</span><span class="token punctuation">(</span>buffer<span class="token punctuation">,</span><span class="token string">"r"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>fp <span class="token operator">!=</span> <span class="token keyword">nullptr</span><span class="token punctuation">)</span>
+ 
+    <span class="token punctuation">&#123;</span>
+ 
+        <span class="token keyword">while</span><span class="token punctuation">(</span><span class="token function">fgets</span><span class="token punctuation">(</span>buffer<span class="token punctuation">,</span><span class="token keyword">sizeof</span><span class="token punctuation">(</span>buffer<span class="token punctuation">)</span><span class="token punctuation">,</span>fp<span class="token punctuation">)</span><span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">strstr</span><span class="token punctuation">(</span>buffer<span class="token punctuation">,</span>szName<span class="token punctuation">)</span><span class="token punctuation">)</span>
+ 
+            <span class="token punctuation">&#123;</span>
+ 
+                <span class="token comment">//分割字符串 返回-之前内容</span>
+ 
+                <span class="token keyword">char</span> <span class="token operator">*</span>temp<span class="token punctuation">;</span>
+ 
+                temp <span class="token operator">=</span> <span class="token function">strtok</span><span class="token punctuation">(</span>buffer<span class="token punctuation">,</span><span class="token string">"-"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+                nBase <span class="token operator">=</span> <span class="token function">strtoul</span><span class="token punctuation">(</span>temp<span class="token punctuation">,</span><span class="token keyword">nullptr</span><span class="token punctuation">,</span><span class="token number">16</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+                <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"BASE IS 0x%x\r\n"</span><span class="token punctuation">,</span>nBase<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+                <span class="token keyword">break</span><span class="token punctuation">;</span>
+ 
+            <span class="token punctuation">&#125;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    <span class="token function">fclose</span><span class="token punctuation">(</span>fp<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">return</span> nBase<span class="token punctuation">;</span>
+ 
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">void</span> <span class="token function">Init</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token function">__attribute__</span><span class="token punctuation">(</span><span class="token punctuation">(</span>constructor<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">//使用”attribute((constructor))”将函数放到”.init_array”段</span>
+ 
+<span class="token keyword">void</span> <span class="token function">Init</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+ 
+<span class="token punctuation">&#123;</span>
+ 
+     <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"Call Init"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token keyword">unsigned</span> <span class="token keyword">int</span> nBase <span class="token operator">=</span> <span class="token function">GetLibAddr</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     Elf32_Ehdr <span class="token operator">*</span>pEhdr <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Ehdr <span class="token operator">*</span><span class="token punctuation">)</span>nBase<span class="token punctuation">;</span>
+ 
+     <span class="token comment">//获取加密节地址</span>
+ 
+     <span class="token keyword">unsigned</span> <span class="token keyword">int</span> mytextBase <span class="token operator">=</span> pEhdr<span class="token operator">-></span>e_shoff <span class="token operator">+</span> nBase<span class="token punctuation">;</span>
+ 
+     <span class="token keyword">unsigned</span> <span class="token keyword">int</span> nBlock <span class="token operator">=</span> <span class="token punctuation">(</span>pEhdr<span class="token operator">-></span>e_entry<span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token number">16</span><span class="token punctuation">;</span><span class="token comment">//加密节的大小</span>
+ 
+     <span class="token keyword">unsigned</span> <span class="token keyword">int</span> nSize <span class="token operator">=</span> <span class="token punctuation">(</span>pEhdr<span class="token operator">-></span>e_entry<span class="token punctuation">)</span> <span class="token operator">&amp;</span> <span class="token number">0xffff</span><span class="token punctuation">;</span><span class="token comment">//加密节的大小</span>
+ 
+     <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"nBlock = %d,nSize = %d"</span><span class="token punctuation">,</span> nBlock<span class="token punctuation">,</span>nSize<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"mytextBase = 0x%x"</span><span class="token punctuation">,</span> mytextBase<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token comment">//修改内存属性</span>
+ 
+     <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">mprotect</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>mytextBase <span class="token operator">/</span> PAGE_SIZE <span class="token operator">*</span> PAGE_SIZE<span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token number">4096</span> <span class="token operator">*</span> nSize<span class="token punctuation">,</span>PROT_READ <span class="token operator">|</span> PROT_EXEC <span class="token operator">|</span> PROT_WRITE<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span>
+ 
+     <span class="token punctuation">&#123;</span>
+ 
+        <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"mem privilege change failed"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token punctuation">&#125;</span>
+ 
+     <span class="token comment">//解密</span>
+ 
+     <span class="token keyword">for</span><span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>i <span class="token operator">&lt;</span> nBlock<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span>
+ 
+     <span class="token punctuation">&#123;</span>
+ 
+        <span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span>addr <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">char</span><span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>mytextBase <span class="token operator">+</span> i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token operator">*</span>addr <span class="token operator">=</span> <span class="token operator">~</span><span class="token punctuation">(</span><span class="token operator">*</span>addr<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token punctuation">&#125;</span>
+ 
+      <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">mprotect</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>mytextBase <span class="token operator">/</span> PAGE_SIZE <span class="token operator">*</span> PAGE_SIZE<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">4096</span> <span class="token operator">*</span> nSize<span class="token punctuation">,</span> PROT_READ <span class="token operator">|</span> PROT_EXEC<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span>
+ 
+      <span class="token punctuation">&#123;</span>
+ 
+         <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"mem privilege change failed"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+      <span class="token punctuation">&#125;</span>
+ 
+      <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"Decrypt success!!!"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>加密程序流程：解析elf结构，从文件头读取section偏移shoff，shnum和shstrtab，读取shstrtab中的字符串，从shoff读取section header，通过pShdr-&gt;sh_name读取节表名比较是否自定义节表名，通过pShdr-&gt;sh_offset pShdr-&gt;sh_size读取节表大小以及内容进行加密，修改section字段中的e_shoff为pShdr-&gt;sh_addr，修改e_entry为pShdr-&gt;sh_size，写入文件。</p>
+<p>关于修改文件头的说明：作为动态链接库，e_entry入口地址是无意义的，因为程序被加载时，设定的跳转地址是动态连接器的地址，这个字段是可以被作为数据填充的。so装载时，与链接视图没有关系，即e_shoff、e_shentsize、e_shnum和e_shstrndx这些字段是可以任意修改。<br>代码如下：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">FormatElf</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span>buffer<span class="token punctuation">)</span>
+ 
+<span class="token punctuation">&#123;</span>
+ 
+    <span class="token comment">//自定义节名</span>
+ 
+    <span class="token keyword">char</span> <span class="token operator">*</span>szSection <span class="token operator">=</span> <span class="token string">".mytext"</span><span class="token punctuation">;</span>
+ 
+    <span class="token comment">//ELF头地址</span>
+ 
+    Elf32_Ehdr <span class="token operator">*</span>pEhdr <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Ehdr<span class="token operator">*</span><span class="token punctuation">)</span>buffer<span class="token punctuation">;</span>
+ 
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token punctuation">(</span><span class="token punctuation">(</span>pEhdr<span class="token operator">-></span>e_ident<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token number">0x7F</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span>
+ 
+          <span class="token punctuation">(</span>pEhdr<span class="token operator">-></span>e_ident<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token char">'E'</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span>
+ 
+          <span class="token punctuation">(</span>pEhdr<span class="token operator">-></span>e_ident<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token char">'L'</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span>
+ 
+          <span class="token punctuation">(</span>pEhdr<span class="token operator">-></span>e_ident<span class="token punctuation">[</span><span class="token number">3</span><span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token char">'F'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+ 
+    <span class="token punctuation">&#123;</span>
+ 
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"无效的文件\r\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    <span class="token comment">//定位到节表</span>
+ 
+    Elf32_Shdr <span class="token operator">*</span>pShdr <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Shdr<span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>buffer <span class="token operator">+</span> pEhdr<span class="token operator">-></span>e_shoff<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token comment">//定位字符串表</span>
+ 
+    <span class="token keyword">char</span> <span class="token operator">*</span>str <span class="token operator">=</span> nullptr<span class="token punctuation">;</span>
+ 
+    Elf32_Shdr <span class="token operator">*</span>pShdrstr <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Shdr <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>buffer <span class="token operator">+</span> pEhdr<span class="token operator">-></span>e_shoff <span class="token operator">+</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span>Elf32_Shdr<span class="token punctuation">)</span> <span class="token operator">*</span> pEhdr<span class="token operator">-></span>e_shstrndx<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    str <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">char</span><span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>pShdrstr<span class="token operator">-></span>sh_offset <span class="token operator">+</span> buffer<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">int</span> nOffset <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">int</span> nSize <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> pEhdr<span class="token operator">-></span>e_shnum<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span>
+ 
+    <span class="token punctuation">&#123;</span>
+ 
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">strcmp</span><span class="token punctuation">(</span>str <span class="token operator">+</span> pShdr<span class="token operator">-></span>sh_name<span class="token punctuation">,</span>szSection<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            <span class="token comment">//获取偏移和大小</span>
+ 
+            nOffset <span class="token operator">=</span> pShdr<span class="token operator">-></span>sh_offset<span class="token punctuation">;</span>
+ 
+            nSize   <span class="token operator">=</span> pShdr<span class="token operator">-></span>sh_size<span class="token punctuation">;</span>
+ 
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"find section %s offset is 0x%x size is 0x%x\n"</span><span class="token punctuation">,</span>szSection<span class="token punctuation">,</span>nOffset<span class="token punctuation">,</span>nSize<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        pShdr<span class="token operator">++</span><span class="token punctuation">;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    <span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span>sectionBuf <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>buffer <span class="token operator">+</span> nOffset<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token comment">//计算section占用内存几页，一个页大小4096</span>
+ 
+    <span class="token keyword">int</span> nPage <span class="token operator">=</span> nSize <span class="token operator">/</span> <span class="token number">4096</span> <span class="token operator">+</span> <span class="token punctuation">(</span>nSize <span class="token operator">%</span> <span class="token number">4096</span> <span class="token operator">==</span> <span class="token number">0</span> <span class="token operator">?</span> <span class="token number">0</span> <span class="token operator">:</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"nOffset = 0x%x, nSize = 0x%x\n"</span><span class="token punctuation">,</span> nOffset<span class="token punctuation">,</span> nSize<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"nPage = %d\n"</span><span class="token punctuation">,</span>nPage<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    pEhdr<span class="token operator">-></span>e_entry <span class="token operator">=</span> <span class="token punctuation">(</span>nSize <span class="token operator">&lt;&lt;</span> <span class="token number">16</span><span class="token punctuation">)</span> <span class="token operator">+</span> nPage<span class="token punctuation">;</span>
+ 
+    pEhdr<span class="token operator">-></span>e_shoff <span class="token operator">=</span> nOffset<span class="token punctuation">;</span>
+ 
+    <span class="token comment">//加密</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"sectionBuf is %x"</span><span class="token punctuation">,</span>sectionBuf<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> j <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> j <span class="token operator">&lt;</span> nSize<span class="token punctuation">;</span> j<span class="token operator">++</span><span class="token punctuation">)</span>
+ 
+    <span class="token punctuation">&#123;</span>
+ 
+        sectionBuf<span class="token punctuation">[</span>j<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token operator">~</span>sectionBuf<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    <span class="token keyword">return</span> <span class="token number">1</span><span class="token punctuation">;</span>
+ 
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>加密后Add函数如下</p>
+<!-- ![](Android壳简单实现/4.png) -->
+<img src="/2018/12/30/Android%E5%A3%B3%E7%AE%80%E5%8D%95%E5%AE%9E%E7%8E%B0/4.png" class="">
+
+<p>二）加密SO中指定函数<br>加密程序流程：解析elf文件，读取文件头，获取e_phoff、e_phentsize和e_phnum信息，通过Elf32_Phdr中的p_type字段，找到DYNAMIC，遍历.dynamic，找到.dynsym、.dynstr、.hash section文件中的偏移和.dynstr的大小，根据函数名称，计算hash，根据hash值，找到下标hash % nbuckets的bucket；根据bucket中的值，读取.dynsym中的对应索引的Elf32_Sym符号；从符号的st_name所以找到在.dynstr中对应的字符串与函数名进行比较。若不等，则根据chain[hash % nbuckets]找下一个Elf32_Sym符号，直到找到或者chain终止为止，找到函数对应的Elf32_Sym符号后，即可根据st_value和st_size字段找到函数的位置和大小，加密数据写入文件。</p>
+<p>代码如下：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">static</span> <span class="token keyword">unsigned</span> <span class="token function">elfhash</span><span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span>_name<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+ 
+    <span class="token keyword">const</span> <span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span>name <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span><span class="token punctuation">)</span> _name<span class="token punctuation">;</span>
+ 
+    <span class="token keyword">unsigned</span> h <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> g<span class="token punctuation">;</span>
+ 
+    <span class="token keyword">while</span><span class="token punctuation">(</span><span class="token operator">*</span>name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+ 
+        h <span class="token operator">=</span> <span class="token punctuation">(</span>h <span class="token operator">&lt;&lt;</span> <span class="token number">4</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token operator">*</span>name<span class="token operator">++</span><span class="token punctuation">;</span>
+ 
+        g <span class="token operator">=</span> h <span class="token operator">&amp;</span> <span class="token number">0xf0000000</span><span class="token punctuation">;</span>
+ 
+        h <span class="token operator">^=</span> g<span class="token punctuation">;</span>
+ 
+        h <span class="token operator">^=</span> g <span class="token operator">>></span> <span class="token number">24</span><span class="token punctuation">;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    <span class="token keyword">return</span> h<span class="token punctuation">;</span> 
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+ <pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">void</span> <span class="token function">GetTargetFuncInfo</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">char</span><span class="token operator">*</span> buffer<span class="token punctuation">,</span><span class="token keyword">char</span> <span class="token operator">*</span>funcName<span class="token punctuation">,</span>funcInfo <span class="token operator">*</span>info<span class="token punctuation">)</span> 
+<span class="token punctuation">&#123;</span>
+ 
+    Elf32_Ehdr <span class="token operator">*</span>pEhdr <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Ehdr <span class="token operator">*</span><span class="token punctuation">)</span> buffer<span class="token punctuation">;</span>
+ 
+    Elf32_Phdr <span class="token operator">*</span>pHdr <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Phdr <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>buffer <span class="token operator">+</span> pEhdr<span class="token operator">-></span>e_phoff<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    Elf32_Word DynSize <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+ 
+    Elf32_Word DynStrsz <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+ 
+    Elf32_Off DynOffset <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+ 
+    Elf32_Addr DynSymtab<span class="token punctuation">,</span> DynStrtab<span class="token punctuation">,</span> DynHash<span class="token punctuation">;</span>
+ 
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> pEhdr<span class="token operator">-></span>e_phnum<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span>
+ 
+    <span class="token punctuation">&#123;</span>
+ 
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>pHdr<span class="token operator">-></span>p_type <span class="token operator">==</span> PT_DYNAMIC<span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            DynSize <span class="token operator">=</span> pHdr<span class="token operator">-></span>p_filesz<span class="token punctuation">;</span>
+ 
+            DynOffset <span class="token operator">=</span> pHdr<span class="token operator">-></span>p_offset<span class="token punctuation">;</span>
+ 
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Find Section %s size = %d offser = %02x\n"</span><span class="token punctuation">,</span> <span class="token string">"PT_DYNAMIC"</span><span class="token punctuation">,</span> DynSize<span class="token punctuation">,</span> DynOffset<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        pHdr<span class="token operator">++</span><span class="token punctuation">;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    Elf32_Dyn <span class="token operator">*</span>pDyn <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Dyn <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>buffer <span class="token operator">+</span> DynOffset<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> j <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> j <span class="token operator">&lt;</span> DynSize <span class="token operator">/</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span>Elf32_Dyn<span class="token punctuation">)</span><span class="token punctuation">;</span> j<span class="token operator">++</span><span class="token punctuation">)</span>
+ 
+    <span class="token punctuation">&#123;</span>
+ 
+        <span class="token comment">//符号表位置</span>
+ 
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>pDyn<span class="token operator">-></span>d_tag <span class="token operator">==</span> DT_SYMTAB<span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            DynSymtab <span class="token operator">=</span> pDyn<span class="token operator">-></span>d_un<span class="token punctuation">.</span>d_ptr<span class="token punctuation">;</span>
+ 
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Find .dynsym, addr = 0x%x, val = 0x%x\n"</span><span class="token punctuation">,</span> DynSymtab<span class="token punctuation">,</span> pDyn<span class="token operator">-></span>d_un<span class="token punctuation">.</span>d_val<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        <span class="token comment">//hash位置</span>
+ 
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>pDyn<span class="token operator">-></span>d_tag <span class="token operator">==</span> DT_HASH<span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            DynHash <span class="token operator">=</span> pDyn<span class="token operator">-></span>d_un<span class="token punctuation">.</span>d_ptr<span class="token punctuation">;</span>
+ 
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Find .hash, addr = 0x%x\n"</span><span class="token punctuation">,</span> DynHash<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        <span class="token comment">//字符串位置</span>
+ 
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>pDyn<span class="token operator">-></span>d_tag <span class="token operator">==</span> DT_STRTAB<span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            DynStrtab <span class="token operator">=</span> pDyn<span class="token operator">-></span>d_un<span class="token punctuation">.</span>d_ptr<span class="token punctuation">;</span>
+ 
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Find .dynstr, addr = 0x%x\n"</span><span class="token punctuation">,</span> DynStrtab<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        <span class="token comment">//字符串大小</span>
+ 
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>pDyn<span class="token operator">-></span>d_tag <span class="token operator">==</span> DT_STRSZ<span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            DynStrsz <span class="token operator">=</span> pDyn<span class="token operator">-></span>d_un<span class="token punctuation">.</span>d_val<span class="token punctuation">;</span>
+ 
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Find .dynstr size, size = 0x%x\n"</span><span class="token punctuation">,</span> DynStrsz<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        pDyn<span class="token operator">++</span><span class="token punctuation">;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    <span class="token comment">//定位字符串表</span>
+ 
+    <span class="token keyword">char</span> <span class="token operator">*</span>dynStr <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">char</span> <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token function">malloc</span><span class="token punctuation">(</span>DynStrsz<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">memcpy</span><span class="token punctuation">(</span>dynStr<span class="token punctuation">,</span> buffer <span class="token operator">+</span> DynStrtab<span class="token punctuation">,</span> DynStrsz<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token comment">/*     nbucket
+ 
+     *-----------------
+ 
+     *       nchain
+ 
+     *------------------
+ 
+     *      bucket[0]
+ 
+     *       ...
+ 
+     *   bucket[nbucket-1]
+ 
+     * ------------------
+ 
+     *     chain[0]
+ 
+     *       ...
+ 
+     *   chain[nchain-1]
+ 
+     */</span>
+ 
+    <span class="token comment">//计算函数名称经过hash运行后的值</span>
+ 
+    <span class="token keyword">unsigned</span> funHash <span class="token operator">=</span> <span class="token function">elfhash</span><span class="token punctuation">(</span>funcName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Function %s hashVal = 0x%x\n"</span><span class="token punctuation">,</span> funcName<span class="token punctuation">,</span> funHash<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token comment">//获取nbucket的值</span>
+ 
+     <span class="token keyword">int</span> nNbucket <span class="token operator">=</span> <span class="token operator">*</span><span class="token punctuation">(</span><span class="token keyword">int</span> <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>buffer <span class="token operator">+</span> DynHash<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"nbucket = %d\n"</span><span class="token punctuation">,</span> nNbucket<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token comment">//获取nchain</span>
+ 
+    <span class="token keyword">int</span> nNchain <span class="token operator">=</span> <span class="token operator">*</span><span class="token punctuation">(</span><span class="token keyword">int</span> <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>buffer <span class="token operator">+</span> DynHash <span class="token operator">+</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"nchain = %d\n"</span><span class="token punctuation">,</span> nNchain<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    funHash <span class="token operator">=</span> funHash <span class="token operator">%</span> nNbucket<span class="token punctuation">;</span>        <span class="token comment">//bucket[X%nbucket]给出了一个索引y，该索引可用于符号表，也可用于chain表</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"funHash mod nbucket = %d \n"</span><span class="token punctuation">,</span> funHash<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">int</span> nFunIndex <span class="token operator">=</span> <span class="token operator">*</span><span class="token punctuation">(</span><span class="token keyword">int</span> <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>buffer <span class="token operator">+</span> DynHash <span class="token operator">+</span> <span class="token number">8</span> <span class="token operator">+</span> funHash <span class="token operator">*</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//y = bucket[X%nbucket]返回的索引y</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"funcIndex:%d\n"</span><span class="token punctuation">,</span> nFunIndex<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    Elf32_Sym <span class="token operator">*</span>pSym <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Sym <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>buffer <span class="token operator">+</span> DynSymtab <span class="token operator">+</span> nFunIndex <span class="token operator">*</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span>Elf32_Sym<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//该索引对应的符号表</span>
+ 
+    <span class="token comment">//如果索引y对应的符号表不是所需要的,那么chain[y]则给出了具有相同哈希值的下一个符号表项</span>
+ 
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">strcmp</span><span class="token punctuation">(</span>dynStr <span class="token operator">+</span> pSym<span class="token operator">-></span>st_name<span class="token punctuation">,</span> funcName<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span>
+ 
+    <span class="token punctuation">&#123;</span>
+ 
+        <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"hash:%x,nbucket:%d,funIndex:%d\n"</span><span class="token punctuation">,</span> DynHash<span class="token punctuation">,</span> nNbucket<span class="token punctuation">,</span> nFunIndex<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            nFunIndex <span class="token operator">=</span> <span class="token operator">*</span><span class="token punctuation">(</span><span class="token keyword">int</span> <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>buffer <span class="token operator">+</span> DynHash <span class="token operator">+</span> <span class="token number">4</span> <span class="token operator">*</span> <span class="token punctuation">(</span><span class="token number">2</span> <span class="token operator">+</span> nNbucket <span class="token operator">+</span> nFunIndex<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//搜索chain链</span>
+ 
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"funcIndex:%d\n"</span><span class="token punctuation">,</span> nFunIndex<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>nFunIndex <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+ 
+                <span class="token function">puts</span><span class="token punctuation">(</span><span class="token string">"Cannot find funtion!\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+                <span class="token keyword">return</span><span class="token punctuation">;</span>
+ 
+            <span class="token punctuation">&#125;</span>
+ 
+            pSym <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Sym <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>buffer <span class="token operator">+</span> DynSymtab <span class="token operator">+</span> nFunIndex <span class="token operator">*</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span>Elf32_Sym<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">//chain[]中对应的符号表</span>
+ 
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">strcmp</span><span class="token punctuation">(</span>dynStr <span class="token operator">+</span> pSym<span class="token operator">-></span>st_name<span class="token punctuation">,</span> funcName<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span>
+ 
+            <span class="token punctuation">&#123;</span>
+ 
+                <span class="token keyword">break</span><span class="token punctuation">;</span>
+ 
+            <span class="token punctuation">&#125;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Find: %s, offset = 0x%x, size = 0x%x\n"</span><span class="token punctuation">,</span> funcName<span class="token punctuation">,</span> pSym<span class="token operator">-></span>st_value<span class="token punctuation">,</span> pSym<span class="token operator">-></span>st_size<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    info<span class="token operator">-></span>st_value <span class="token operator">=</span> pSym<span class="token operator">-></span>st_value<span class="token punctuation">;</span>
+ 
+    info<span class="token operator">-></span>st_size <span class="token operator">=</span> pSym<span class="token operator">-></span>st_size<span class="token punctuation">;</span>
+ 
+    <span class="token function">free</span><span class="token punctuation">(</span>dynStr<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+ 
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>解密程序流程：解密流程为加密逆过程，区别是找到PT_DYNAMIC后需取p_vaddr和p_filesz字段而不是 p_offset字段。</p>
+<p>代码如下：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">void</span> <span class="token function">GetTargetFuncInfo</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">int</span> nBase<span class="token punctuation">,</span><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span>funcName<span class="token punctuation">,</span>funcInfo <span class="token operator">*</span>info<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+ 
+    Elf32_Ehdr <span class="token operator">*</span>pEhdr <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Ehdr <span class="token operator">*</span><span class="token punctuation">)</span> nBase<span class="token punctuation">;</span>
+ 
+    Elf32_Phdr <span class="token operator">*</span>pHdr <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Phdr <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>nBase <span class="token operator">+</span> pEhdr<span class="token operator">-></span>e_phoff<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"phdr =  0x%p, size = 0x%x\n"</span><span class="token punctuation">,</span> pEhdr<span class="token punctuation">,</span> pEhdr<span class="token operator">-></span>e_phnum<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> pEhdr<span class="token operator">-></span>e_phnum<span class="token punctuation">;</span> <span class="token operator">++</span>i<span class="token punctuation">)</span>
+ 
+    <span class="token punctuation">&#123;</span>
+ 
+        <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"phdr =  0x%p\n"</span><span class="token punctuation">,</span> pHdr<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+       <span class="token comment">//获得动态链接节</span>
+ 
+        <span class="token keyword">if</span><span class="token punctuation">(</span>pHdr<span class="token operator">-></span>p_type <span class="token operator">==</span>  PT_DYNAMIC<span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"Find .dynamic segment"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+       pHdr <span class="token operator">++</span><span class="token punctuation">;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    Elf32_Off dyn_vaddr <span class="token operator">=</span> pHdr<span class="token operator">-></span>p_vaddr <span class="token operator">+</span> nBase<span class="token punctuation">;</span>
+ 
+    Elf32_Word dyn_size <span class="token operator">=</span> pHdr<span class="token operator">-></span>p_filesz<span class="token punctuation">;</span>
+ 
+    Elf32_Dyn <span class="token operator">*</span>dyn<span class="token punctuation">;</span>
+ 
+    Elf32_Addr dyn_symtab<span class="token punctuation">,</span> dyn_strtab<span class="token punctuation">,</span> dyn_hash<span class="token punctuation">;</span>
+ 
+    Elf32_Word dyn_strsz<span class="token punctuation">;</span>
+ 
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> dyn_size <span class="token operator">/</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span>Elf32_Dyn<span class="token punctuation">)</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span>
+ 
+    <span class="token punctuation">&#123;</span>
+ 
+        dyn <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Dyn <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>dyn_vaddr <span class="token operator">+</span> i <span class="token operator">*</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span>Elf32_Dyn<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token comment">//符号表位置</span>
+ 
+        <span class="token keyword">if</span><span class="token punctuation">(</span>dyn<span class="token operator">-></span>d_tag <span class="token operator">==</span> DT_SYMTAB<span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            dyn_symtab <span class="token operator">=</span> <span class="token punctuation">(</span>dyn<span class="token operator">-></span>d_un<span class="token punctuation">)</span><span class="token punctuation">.</span>d_ptr<span class="token punctuation">;</span>
+ 
+            <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"Find .dynsym section, addr = 0x%x\n"</span><span class="token punctuation">,</span> dyn_symtab<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        <span class="token comment">//获得hash段</span>
+ 
+        <span class="token keyword">if</span><span class="token punctuation">(</span>dyn<span class="token operator">-></span>d_tag <span class="token operator">==</span> DT_HASH<span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            dyn_hash <span class="token operator">=</span> <span class="token punctuation">(</span>dyn<span class="token operator">-></span>d_un<span class="token punctuation">)</span><span class="token punctuation">.</span>d_ptr<span class="token punctuation">;</span>
+ 
+            <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"Find .hash section, addr = 0x%x\n"</span><span class="token punctuation">,</span> dyn_hash<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        <span class="token comment">//保存函数字符串的位置</span>
+ 
+        <span class="token keyword">if</span><span class="token punctuation">(</span>dyn<span class="token operator">-></span>d_tag <span class="token operator">==</span> DT_STRTAB<span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            dyn_strtab <span class="token operator">=</span> <span class="token punctuation">(</span>dyn<span class="token operator">-></span>d_un<span class="token punctuation">)</span><span class="token punctuation">.</span>d_ptr<span class="token punctuation">;</span>
+ 
+            <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"Find .dynstr section, addr = 0x%x\n"</span><span class="token punctuation">,</span> dyn_strtab<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+        <span class="token comment">//字符串长度</span>
+ 
+        <span class="token keyword">if</span><span class="token punctuation">(</span>dyn<span class="token operator">-></span>d_tag <span class="token operator">==</span> DT_STRSZ<span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            dyn_strsz <span class="token operator">=</span> <span class="token punctuation">(</span>dyn<span class="token operator">-></span>d_un<span class="token punctuation">)</span><span class="token punctuation">.</span>d_val<span class="token punctuation">;</span>
+ 
+            <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"Find strsz size = 0x%x\n"</span><span class="token punctuation">,</span> dyn_strsz<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    dyn_symtab <span class="token operator">+=</span> nBase<span class="token punctuation">;</span>
+ 
+    dyn_hash <span class="token operator">+=</span> nBase<span class="token punctuation">;</span>
+ 
+    dyn_strtab <span class="token operator">+=</span> nBase<span class="token punctuation">;</span>
+ 
+    dyn_strsz <span class="token operator">+=</span> nBase<span class="token punctuation">;</span>
+ 
+ <span class="token comment">/*     nbucket
+ 
+ *-----------------
+ 
+ *     nchain
+ 
+ *------------------
+ 
+ *    bucket[0]
+ 
+ *       ...
+ 
+ *   bucket[nbucket-1]
+ 
+ * ------------------
+ 
+ *     chain[0]
+ 
+ *       ...
+ 
+ *   chain[nchain-1]
+ 
+ */</span>
+ 
+    <span class="token keyword">unsigned</span> funHash <span class="token operator">=</span>  <span class="token function">elfhash</span><span class="token punctuation">(</span>funcName<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//获得函数名称经过hash运行后的值</span>
+ 
+    Elf32_Sym <span class="token operator">*</span>funSym <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Sym <span class="token operator">*</span><span class="token punctuation">)</span> dyn_symtab<span class="token punctuation">;</span>
+ 
+    <span class="token keyword">char</span> <span class="token operator">*</span>dynstr <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">char</span><span class="token operator">*</span><span class="token punctuation">)</span> dyn_strtab<span class="token punctuation">;</span>
+ 
+    <span class="token keyword">unsigned</span> nbucket <span class="token operator">=</span> <span class="token operator">*</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">int</span> <span class="token operator">*</span><span class="token punctuation">)</span> dyn_hash<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//获得nbucket的值</span>
+ 
+    <span class="token keyword">int</span> <span class="token operator">*</span>bucket <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">int</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>dyn_hash <span class="token operator">+</span> <span class="token number">8</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//bucket链</span>
+ 
+    <span class="token keyword">unsigned</span> <span class="token keyword">int</span> <span class="token operator">*</span>chain <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">int</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>dyn_hash <span class="token operator">+</span> <span class="token number">4</span> <span class="token operator">*</span> <span class="token punctuation">(</span><span class="token number">2</span> <span class="token operator">+</span> nbucket<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//越过bucket链，到达chain链</span>
+ 
+    <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"hash = 0x%x, nbucket = 0x%x\n"</span><span class="token punctuation">,</span> funHash<span class="token punctuation">,</span> nbucket<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token comment">//bucket[X%nbucket]给出了一个索引y，该索引可用于符号表，也可用于chain表</span>
+ 
+    <span class="token keyword">int</span> mod <span class="token operator">=</span> <span class="token punctuation">(</span>funHash <span class="token operator">%</span> nbucket<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"mod = %d\n"</span><span class="token punctuation">,</span> mod<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"i = 0x%d\n"</span><span class="token punctuation">,</span> bucket<span class="token punctuation">[</span>mod<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+    <span class="token comment">//i = mod = bucket[funHash%nbucket]，通过遍历i = chain[i]表，找到funSym对应的符号表</span>
+ 
+    <span class="token keyword">int</span> i<span class="token punctuation">;</span>
+ 
+    <span class="token keyword">for</span><span class="token punctuation">(</span>i <span class="token operator">=</span> bucket<span class="token punctuation">[</span>funHash <span class="token operator">%</span> nbucket<span class="token punctuation">]</span><span class="token punctuation">;</span> i <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">=</span> chain<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span>
+ 
+    <span class="token punctuation">&#123;</span>
+ 
+        <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">strcmp</span><span class="token punctuation">(</span>dynstr <span class="token operator">+</span> <span class="token punctuation">(</span>funSym <span class="token operator">+</span> i<span class="token punctuation">)</span><span class="token operator">-></span>st_name<span class="token punctuation">,</span> funcName<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span>
+ 
+        <span class="token punctuation">&#123;</span>
+ 
+            <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"Find %s\n"</span><span class="token punctuation">,</span> funcName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+ 
+        <span class="token punctuation">&#125;</span>
+ 
+    <span class="token punctuation">&#125;</span>
+ 
+    info<span class="token operator">-></span>st_value <span class="token operator">=</span> <span class="token punctuation">(</span>funSym <span class="token operator">+</span> i<span class="token punctuation">)</span><span class="token operator">-></span>st_value<span class="token punctuation">;</span><span class="token comment">//函数对应符号表中保存函数的地址</span>
+ 
+    info<span class="token operator">-></span>st_size <span class="token operator">=</span> <span class="token punctuation">(</span>funSym <span class="token operator">+</span> i<span class="token punctuation">)</span><span class="token operator">-></span>st_size<span class="token punctuation">;</span><span class="token comment">//函数符号表中保存函数的大小</span>
+ 
+    <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"st_value = %d,st_size = %d"</span><span class="token punctuation">,</span>info<span class="token operator">-></span>st_value<span class="token punctuation">,</span>info<span class="token operator">-></span>st_size<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">void</span> <span class="token function">Init</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token function">__attribute__</span><span class="token punctuation">(</span><span class="token punctuation">(</span>constructor<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">//使用”attribute((constructor))”将函数放到”.init_array”段</span>
+ 
+<span class="token keyword">void</span> <span class="token function">Init</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+ 
+     <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"Call Init"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token keyword">unsigned</span> <span class="token keyword">int</span> nBase <span class="token operator">=</span> <span class="token function">GetLibAddr</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     Elf32_Ehdr <span class="token operator">*</span>pEhdr <span class="token operator">=</span> <span class="token punctuation">(</span>Elf32_Ehdr <span class="token operator">*</span><span class="token punctuation">)</span>nBase<span class="token punctuation">;</span>
+ 
+     funcInfo info<span class="token punctuation">;</span>
+ 
+     <span class="token keyword">const</span> <span class="token keyword">char</span> funcName<span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">"Java_home_com_sotest_MainActivity_Add"</span><span class="token punctuation">;</span>
+ 
+     <span class="token function">GetTargetFuncInfo</span><span class="token punctuation">(</span>nBase<span class="token punctuation">,</span>funcName<span class="token punctuation">,</span><span class="token operator">&amp;</span>info<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token keyword">unsigned</span> <span class="token keyword">int</span> nPage <span class="token operator">=</span> info<span class="token punctuation">.</span>st_size <span class="token operator">/</span> PAGE_SIZE <span class="token operator">+</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>info<span class="token punctuation">.</span>st_size <span class="token operator">%</span> PAGE_SIZE <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">?</span> <span class="token number">0</span> <span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"nPage =  %02x"</span><span class="token punctuation">,</span> nPage<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"nPage =  %02x"</span><span class="token punctuation">,</span> PAGE_SIZE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">mprotect</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>nBase <span class="token operator">+</span> info<span class="token punctuation">.</span>st_value<span class="token punctuation">)</span> <span class="token operator">/</span> PAGE_SIZE <span class="token operator">*</span> PAGE_SIZE<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">4096</span> <span class="token operator">*</span> nPage<span class="token punctuation">,</span> PROT_READ <span class="token operator">|</span> PROT_EXEC <span class="token operator">|</span> PROT_WRITE<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span>
+ 
+     <span class="token punctuation">&#123;</span>
+ 
+        <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"mem privilege change failed"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+     <span class="token punctuation">&#125;</span>
+ 
+      <span class="token keyword">for</span><span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>i <span class="token operator">&lt;</span> info<span class="token punctuation">.</span>st_size <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span>
+ 
+      <span class="token punctuation">&#123;</span>
+ 
+        <span class="token keyword">char</span> <span class="token operator">*</span>addr <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">char</span><span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>nBase <span class="token operator">+</span> info<span class="token punctuation">.</span>st_value <span class="token operator">-</span> <span class="token number">1</span> <span class="token operator">+</span> i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+        <span class="token operator">*</span>addr <span class="token operator">=</span> <span class="token operator">~</span><span class="token punctuation">(</span><span class="token operator">*</span>addr<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+      <span class="token punctuation">&#125;</span>
+ 
+      <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">mprotect</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>nBase <span class="token operator">+</span> info<span class="token punctuation">.</span>st_value<span class="token punctuation">)</span> <span class="token operator">/</span> PAGE_SIZE <span class="token operator">*</span> PAGE_SIZE<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">4096</span> <span class="token operator">*</span> nPage<span class="token punctuation">,</span> PROT_READ <span class="token operator">|</span> PROT_EXEC<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span>
+ 
+      <span class="token punctuation">&#123;</span>
+ 
+        <span class="token function">LOGD</span><span class="token punctuation">(</span><span class="token string">"mem privilege change failed"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+      <span class="token punctuation">&#125;</span>
+ 
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>参考各位大佬帖子地址</p>
+<p><a target="_blank" rel="noopener" href="https://bbs.pediy.com/thread-191649.htm">https://bbs.pediy.com/thread-191649.htm</a></p>
+<p><a target="_blank" rel="noopener" href="https://bbs.pediy.com/thread-191649.htm">https://bbs.pediy.com/thread-191649.htm</a></p>
+<p><a target="_blank" rel="noopener" href="https://bbs.pediy.com/thread-216119.htm">https://bbs.pediy.com/thread-216119.htm</a></p>
+<p><a target="_blank" rel="noopener" href="https://bbs.pediy.com/thread-225303.htm">https://bbs.pediy.com/thread-225303.htm</a></p>
+<p>dex和so动态加载部分可以看看大佬写的文章，这篇文章属于拿来主义吧，参考了许多大佬写的东西，但实践过程中也学到了不少姿势，再次熟悉了dex和elf文件格式等等。</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2018/05/17/%E5%8F%8D%E8%B0%83%E8%AF%95%E5%8F%8A%E5%8F%8D%E5%8F%8D%E8%B0%83%E8%AF%95/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>Prev</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+              2018-12-30 02:59:06
+            </span>
+            
+                  <span class="post-tags">
+                    <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                    
+                    <span class="span--tag mr-8">
+                      <a href="/tags/reverse/" title="reverse">
+                        #reverse
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2019/11/08/LLDB%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95/" target="_self">
+                <span>Next</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">Contents</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Dex%E5%8A%A0%E5%9B%BA"><span class="toc-text">Dex加固</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#So%E5%8A%A0%E5%9B%BA"><span class="toc-text">So加固</span></a></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+  <div id="disqus_thread"></div>
+  <script>
+    /**
+    *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+    *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+    /*
+    var disqus_config = function () {
+    this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+    this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+    */
+    (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = 'https://smallsun107.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          <a title="github" target="_blank" rel="noopener" href="https://github.com/smallsun107">
+            <i class="iconfont icon-github"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a title="rss" href="/atom.xml">
+            <i class="iconfont icon-rss"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        Copyright © 2022 smallsun
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        Theme by Oranges | Powered by Hexo
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+          本站总访问量<span id="busuanzi_value_site_pv"></span>次
+        
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+          本站访客数<span id="busuanzi_value_site_uv"></span>人
+        
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+  <div class="search-icon tools-bar-item" id="search-icon">
+    <a href="javascript: void(0)">
+      <i class="iconfont icon-search"></i>
+    </a>
+  </div>
+
+  <div class="search-overlay hidden">
+    <div class="search-content" tabindex="0">
+      <div class="search-title">
+        <span class="search-icon-input">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-search"></i>
+          </a>
+        </span>
+        
+          <input type="text" class="search-input" id="search-input" placeholder="Search...">
+        
+        <span class="search-close-icon" id="search-close-icon">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-close"></i>
+          </a>
+        </span>
+      </div>
+      <div class="search-result" id="search-result"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var inputArea = document.querySelector("#search-input")
+    var searchOverlayArea = document.querySelector(".search-overlay")
+
+    inputArea.onclick = function() {
+      getSearchFile()
+      this.onclick = null
+    }
+
+    inputArea.onkeydown = function() {
+      if(event.keyCode == 13)
+        return false
+    }
+
+    function openOrHideSearchContent() {
+      let isHidden = searchOverlayArea.classList.contains('hidden')
+      if (isHidden) {
+        searchOverlayArea.classList.remove('hidden')
+        document.body.classList.add('hidden')
+        // inputArea.focus()
+      } else {
+        searchOverlayArea.classList.add('hidden')
+        document.body.classList.remove('hidden')
+      }
+    }
+
+    function blurSearchContent(e) {
+      if (e.target === searchOverlayArea) {
+        openOrHideSearchContent()
+      }
+    }
+
+    document.querySelector("#search-icon").addEventListener("click", openOrHideSearchContent, false)
+    document.querySelector("#search-close-icon").addEventListener("click", openOrHideSearchContent, false)
+    searchOverlayArea.addEventListener("click", blurSearchContent, false)
+
+    var searchFunc = function (path, search_id, content_id) {
+      'use strict';
+      var $input = document.getElementById(search_id);
+      var $resultContent = document.getElementById(content_id);
+      $resultContent.innerHTML = "<ul><span class='local-search-empty'>First search, index file loading, please wait...<span></ul>";
+      $.ajax({
+        // 0x01. load xml file
+        url: path,
+        dataType: "xml",
+        success: function (xmlResponse) {
+          // 0x02. parse xml file
+          var datas = $("entry", xmlResponse).map(function () {
+            return {
+              title: $("title", this).text(),
+              content: $("content", this).text(),
+              url: $("url", this).text()
+            };
+          }).get();
+          $resultContent.innerHTML = "";
+
+          $input.addEventListener('input', function () {
+            // 0x03. parse query to keywords list
+            var str = '<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length <= 0) {
+              return;
+            }
+            // 0x04. perform local searching
+            datas.forEach(function (data) {
+              var isMatch = true;
+              var content_index = [];
+              if (!data.title || data.title.trim() === '') {
+                data.title = "Untitled";
+              }
+              var orig_data_title = data.title.trim();
+              var data_title = orig_data_title.toLowerCase();
+              var orig_data_content = data.content.trim().replace(/<[^>]+>/g, "");
+              var data_content = orig_data_content.toLowerCase();
+              var data_url = data.url;
+              var index_title = -1;
+              var index_content = -1;
+              var first_occur = -1;
+              // only match artiles with not empty contents
+              if (data_content !== '') {
+                keywords.forEach(function (keyword, i) {
+                  index_title = data_title.indexOf(keyword);
+                  index_content = data_content.indexOf(keyword);
+
+                  if (index_title < 0 && index_content < 0) {
+                    isMatch = false;
+                  } else {
+                    if (index_content < 0) {
+                      index_content = 0;
+                    }
+                    if (i == 0) {
+                      first_occur = index_content;
+                    }
+                    // content_index.push({index_content:index_content, keyword_len:keyword_len});
+                  }
+                });
+              } else {
+                isMatch = false;
+              }
+              // 0x05. show search results
+              if (isMatch) {
+                str += "<li><a href='" + data_url + "' class='search-result-title'>" + orig_data_title + "</a>";
+                var content = orig_data_content;
+                if (first_occur >= 0) {
+                  // cut out 100 characters
+                  var start = first_occur - 20;
+                  var end = first_occur + 80;
+
+                  if (start < 0) {
+                    start = 0;
+                  }
+
+                  if (start == 0) {
+                    end = 100;
+                  }
+
+                  if (end > content.length) {
+                    end = content.length;
+                  }
+
+                  var match_content = content.substr(start, end);
+
+                  // highlight all keywords
+                  keywords.forEach(function (keyword) {
+                    var regS = new RegExp(keyword, "gi");
+                    match_content = match_content.replace(regS, "<span class=\"search-keyword\">" + keyword + "</span>");
+                  });
+
+                  str += "<p class=\"search-result-abstract\">" + match_content + "...</p>"
+                }
+                str += "</li>";
+              }
+            });
+            str += "</ul>";
+            if (str.indexOf('<li>') === -1) {
+              return $resultContent.innerHTML = "<ul><span class='local-search-empty'>No result<span></ul>";
+            }
+            $resultContent.innerHTML = str;
+          });
+        },
+        error: function(xhr, status, error) {
+          $resultContent.innerHTML = ""
+          if (xhr.status === 404) {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The search.xml file was not found, please refer to：<a href='https://github.com/zchengsite/hexo-theme-oranges#configuration' target='_black'>configuration</a><span></ul>";
+          } else {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The request failed, Try to refresh the page or try again later.<span></ul>";
+          }
+        }
+      });
+      $(document).on('click', '#search-close-icon', function() {
+        $('#search-input').val('');
+        $('#search-result').html('');
+      });
+    }
+
+    var getSearchFile = function() {
+        var path = "/search.xml";
+        searchFunc(path, 'search-input', 'search-result');
+    }
+  </script>
+
+
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Android%E5%A3%B3%E7%AE%80%E5%8D%95%E5%AE%9E%E7%8E%B0 + '&url=' + https%3A%2F%2Fblog.smallsun.online%2F2018%2F12%2F30%2FAndroid%25E5%25A3%25B3%25E7%25AE%2580%25E5%258D%2595%25E5%25AE%259E%25E7%258E%25B0%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://blog.smallsun.online/2018/12/30/Android%E5%A3%B3%E7%AE%80%E5%8D%95%E5%AE%9E%E7%8E%B0/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>

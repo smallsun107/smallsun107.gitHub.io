@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="keywords" content="逆向,网络安全,系统安全,Windows,Android,iOS,Reverse" />
+  <meta name="author" content="smallsun" />
+  <meta name="description" content="it&#39;s my life." />
+  
+  
+  <title>
+    
+      算法识别之CRC 
+      
+      
+      |
+    
+     smallsun&#39;s Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+    <link rel="icon" href="/images/favicon.png">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-245031966-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-245031966-1');
+    </script>
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 6.2.0"><link rel="alternate" href="/atom.xml" title="smallsun's Blog" type="application/atom+xml">
+</head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/avatar.png" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">smallsun</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/">
+          <a href="/">Home</a>
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          <a href="/tags/">Tags</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">算法识别之CRC</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+          2016-12-16 22:34:56
+        </span>
+        
+              <span class="post-tags">
+                <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                
+                <span class="span--tag mr-8">
+                  <a href="/tags/reverse/" title="reverse">
+                    #reverse
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <p>CRC的识别比较简单了。</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">unsigned</span> <span class="token keyword">long</span> table<span class="token punctuation">[</span><span class="token number">256</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token comment">//位逆转  </span>
+<span class="token keyword">static</span> <span class="token keyword">unsigned</span> <span class="token keyword">long</span> <span class="token function">bitrev</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">long</span> input<span class="token punctuation">,</span> <span class="token keyword">int</span> bw<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">int</span> i<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">long</span> var<span class="token punctuation">;</span>
+    var <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> bw<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span>
+    <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>input <span class="token operator">&amp;</span> <span class="token number">0x01</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#123;</span>
+            var <span class="token operator">|=</span> <span class="token number">1</span> <span class="token operator">&lt;&lt;</span> <span class="token punctuation">(</span>bw <span class="token operator">-</span> <span class="token number">1</span> <span class="token operator">-</span> i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        input <span class="token operator">>>=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> var<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token comment">//码表生成  </span>
+<span class="token comment">//如:X32+X26+...X1+1,poly=(1&lt;&lt;26)|...|(1&lt;&lt;1)|(1&lt;&lt;0)  </span>
+<span class="token keyword">void</span> <span class="token function">crc32_init</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">long</span> poly<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">int</span> i<span class="token punctuation">;</span>
+    <span class="token keyword">int</span> j<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">long</span> c<span class="token punctuation">;</span>
+    poly <span class="token operator">=</span> <span class="token function">bitrev</span><span class="token punctuation">(</span>poly<span class="token punctuation">,</span> <span class="token number">32</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">256</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span>
+    <span class="token punctuation">&#123;</span>
+        c <span class="token operator">=</span> i<span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span>j <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> j <span class="token operator">&lt;</span> <span class="token number">8</span><span class="token punctuation">;</span> j<span class="token operator">++</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#123;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>c <span class="token operator">&amp;</span> <span class="token number">1</span><span class="token punctuation">)</span>
+            <span class="token punctuation">&#123;</span>
+                c <span class="token operator">=</span> poly <span class="token operator">^</span> <span class="token punctuation">(</span>c <span class="token operator">>></span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token keyword">else</span>
+            <span class="token punctuation">&#123;</span>
+                c <span class="token operator">=</span> c <span class="token operator">>></span> <span class="token number">1</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+        table<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> c<span class="token punctuation">;</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"CRC32表:%x\n"</span><span class="token punctuation">,</span> c<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">unsigned</span> <span class="token keyword">long</span> <span class="token function">crc32</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">long</span> crc<span class="token punctuation">,</span> <span class="token keyword">void</span><span class="token operator">*</span> input<span class="token punctuation">,</span> <span class="token keyword">int</span> len<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">int</span> i<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">char</span> index<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">char</span><span class="token operator">*</span> pch<span class="token punctuation">;</span>
+    pch <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">char</span><span class="token operator">*</span><span class="token punctuation">)</span>input<span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> len<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span>
+    <span class="token punctuation">&#123;</span>
+        index <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">char</span><span class="token punctuation">)</span><span class="token punctuation">(</span>crc<span class="token operator">^</span><span class="token operator">*</span>pch<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        crc <span class="token operator">=</span> <span class="token punctuation">(</span>crc <span class="token operator">>></span> <span class="token number">8</span><span class="token punctuation">)</span> <span class="token operator">^</span> table<span class="token punctuation">[</span>index<span class="token punctuation">]</span><span class="token punctuation">;</span>
+        pch<span class="token operator">++</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> crc<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">int</span> <span class="token function">_tmain</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> _TCHAR<span class="token operator">*</span> argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">long</span> crc<span class="token punctuation">;</span>
+    <span class="token function">crc32_init</span><span class="token punctuation">(</span><span class="token number">0x4C11DB7</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  
+    crc <span class="token operator">=</span> <span class="token number">0xFFFFFFFF</span><span class="token punctuation">;</span>
+    crc <span class="token operator">=</span> <span class="token function">crc32</span><span class="token punctuation">(</span>crc<span class="token punctuation">,</span> <span class="token string">"1234567890"</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    crc <span class="token operator">^=</span> <span class="token number">0xFFFFFFFF</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"CRC32=%08X\n"</span><span class="token punctuation">,</span> crc<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">system</span><span class="token punctuation">(</span><span class="token string">"pause"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>初始化的这张表就是关键了。</p>
+<p>总结一下识别Crc32的关键特征：<br>会生成一张大小为0x400大小的表，表数据如下。</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">static</span> <span class="token keyword">const</span> ub4 crctab<span class="token punctuation">[</span><span class="token number">256</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">&#123;</span>
+  <span class="token number">0x00000000</span><span class="token punctuation">,</span> <span class="token number">0x77073096</span><span class="token punctuation">,</span> <span class="token number">0xee0e612c</span><span class="token punctuation">,</span> <span class="token number">0x990951ba</span><span class="token punctuation">,</span> <span class="token number">0x076dc419</span><span class="token punctuation">,</span> <span class="token number">0x706af48f</span><span class="token punctuation">,</span>
+  <span class="token number">0xe963a535</span><span class="token punctuation">,</span> <span class="token number">0x9e6495a3</span><span class="token punctuation">,</span> <span class="token number">0x0edb8832</span><span class="token punctuation">,</span> <span class="token number">0x79dcb8a4</span><span class="token punctuation">,</span> <span class="token number">0xe0d5e91e</span><span class="token punctuation">,</span> <span class="token number">0x97d2d988</span><span class="token punctuation">,</span>
+  <span class="token number">0x09b64c2b</span><span class="token punctuation">,</span> <span class="token number">0x7eb17cbd</span><span class="token punctuation">,</span> <span class="token number">0xe7b82d07</span><span class="token punctuation">,</span> <span class="token number">0x90bf1d91</span><span class="token punctuation">,</span> <span class="token number">0x1db71064</span><span class="token punctuation">,</span> <span class="token number">0x6ab020f2</span><span class="token punctuation">,</span>
+  <span class="token number">0xf3b97148</span><span class="token punctuation">,</span> <span class="token number">0x84be41de</span><span class="token punctuation">,</span> <span class="token number">0x1adad47d</span><span class="token punctuation">,</span> <span class="token number">0x6ddde4eb</span><span class="token punctuation">,</span> <span class="token number">0xf4d4b551</span><span class="token punctuation">,</span> <span class="token number">0x83d385c7</span><span class="token punctuation">,</span>
+  <span class="token number">0x136c9856</span><span class="token punctuation">,</span> <span class="token number">0x646ba8c0</span><span class="token punctuation">,</span> <span class="token number">0xfd62f97a</span><span class="token punctuation">,</span> <span class="token number">0x8a65c9ec</span><span class="token punctuation">,</span> <span class="token number">0x14015c4f</span><span class="token punctuation">,</span> <span class="token number">0x63066cd9</span><span class="token punctuation">,</span>
+  <span class="token number">0xfa0f3d63</span><span class="token punctuation">,</span> <span class="token number">0x8d080df5</span><span class="token punctuation">,</span> <span class="token number">0x3b6e20c8</span><span class="token punctuation">,</span> <span class="token number">0x4c69105e</span><span class="token punctuation">,</span> <span class="token number">0xd56041e4</span><span class="token punctuation">,</span> <span class="token number">0xa2677172</span><span class="token punctuation">,</span>
+  <span class="token number">0x3c03e4d1</span><span class="token punctuation">,</span> <span class="token number">0x4b04d447</span><span class="token punctuation">,</span> <span class="token number">0xd20d85fd</span><span class="token punctuation">,</span> <span class="token number">0xa50ab56b</span><span class="token punctuation">,</span> <span class="token number">0x35b5a8fa</span><span class="token punctuation">,</span> <span class="token number">0x42b2986c</span><span class="token punctuation">,</span>
+  <span class="token number">0xdbbbc9d6</span><span class="token punctuation">,</span> <span class="token number">0xacbcf940</span><span class="token punctuation">,</span> <span class="token number">0x32d86ce3</span><span class="token punctuation">,</span> <span class="token number">0x45df5c75</span><span class="token punctuation">,</span> <span class="token number">0xdcd60dcf</span><span class="token punctuation">,</span> <span class="token number">0xabd13d59</span><span class="token punctuation">,</span>
+  <span class="token number">0x26d930ac</span><span class="token punctuation">,</span> <span class="token number">0x51de003a</span><span class="token punctuation">,</span> <span class="token number">0xc8d75180</span><span class="token punctuation">,</span> <span class="token number">0xbfd06116</span><span class="token punctuation">,</span> <span class="token number">0x21b4f4b5</span><span class="token punctuation">,</span> <span class="token number">0x56b3c423</span><span class="token punctuation">,</span>
+  <span class="token number">0xcfba9599</span><span class="token punctuation">,</span> <span class="token number">0xb8bda50f</span><span class="token punctuation">,</span> <span class="token number">0x2802b89e</span><span class="token punctuation">,</span> <span class="token number">0x5f058808</span><span class="token punctuation">,</span> <span class="token number">0xc60cd9b2</span><span class="token punctuation">,</span> <span class="token number">0xb10be924</span><span class="token punctuation">,</span>
+  <span class="token number">0x2f6f7c87</span><span class="token punctuation">,</span> <span class="token number">0x58684c11</span><span class="token punctuation">,</span> <span class="token number">0xc1611dab</span><span class="token punctuation">,</span> <span class="token number">0xb6662d3d</span><span class="token punctuation">,</span> <span class="token number">0x76dc4190</span><span class="token punctuation">,</span> <span class="token number">0x01db7106</span><span class="token punctuation">,</span>
+  <span class="token number">0x98d220bc</span><span class="token punctuation">,</span> <span class="token number">0xefd5102a</span><span class="token punctuation">,</span> <span class="token number">0x71b18589</span><span class="token punctuation">,</span> <span class="token number">0x06b6b51f</span><span class="token punctuation">,</span> <span class="token number">0x9fbfe4a5</span><span class="token punctuation">,</span> <span class="token number">0xe8b8d433</span><span class="token punctuation">,</span>
+  <span class="token number">0x7807c9a2</span><span class="token punctuation">,</span> <span class="token number">0x0f00f934</span><span class="token punctuation">,</span> <span class="token number">0x9609a88e</span><span class="token punctuation">,</span> <span class="token number">0xe10e9818</span><span class="token punctuation">,</span> <span class="token number">0x7f6a0dbb</span><span class="token punctuation">,</span> <span class="token number">0x086d3d2d</span><span class="token punctuation">,</span>
+  <span class="token number">0x91646c97</span><span class="token punctuation">,</span> <span class="token number">0xe6635c01</span><span class="token punctuation">,</span> <span class="token number">0x6b6b51f4</span><span class="token punctuation">,</span> <span class="token number">0x1c6c6162</span><span class="token punctuation">,</span> <span class="token number">0x856530d8</span><span class="token punctuation">,</span> <span class="token number">0xf262004e</span><span class="token punctuation">,</span>
+  <span class="token number">0x6c0695ed</span><span class="token punctuation">,</span> <span class="token number">0x1b01a57b</span><span class="token punctuation">,</span> <span class="token number">0x8208f4c1</span><span class="token punctuation">,</span> <span class="token number">0xf50fc457</span><span class="token punctuation">,</span> <span class="token number">0x65b0d9c6</span><span class="token punctuation">,</span> <span class="token number">0x12b7e950</span><span class="token punctuation">,</span>
+  <span class="token number">0x8bbeb8ea</span><span class="token punctuation">,</span> <span class="token number">0xfcb9887c</span><span class="token punctuation">,</span> <span class="token number">0x62dd1ddf</span><span class="token punctuation">,</span> <span class="token number">0x15da2d49</span><span class="token punctuation">,</span> <span class="token number">0x8cd37cf3</span><span class="token punctuation">,</span> <span class="token number">0xfbd44c65</span><span class="token punctuation">,</span>
+  <span class="token number">0x4db26158</span><span class="token punctuation">,</span> <span class="token number">0x3ab551ce</span><span class="token punctuation">,</span> <span class="token number">0xa3bc0074</span><span class="token punctuation">,</span> <span class="token number">0xd4bb30e2</span><span class="token punctuation">,</span> <span class="token number">0x4adfa541</span><span class="token punctuation">,</span> <span class="token number">0x3dd895d7</span><span class="token punctuation">,</span>
+  <span class="token number">0xa4d1c46d</span><span class="token punctuation">,</span> <span class="token number">0xd3d6f4fb</span><span class="token punctuation">,</span> <span class="token number">0x4369e96a</span><span class="token punctuation">,</span> <span class="token number">0x346ed9fc</span><span class="token punctuation">,</span> <span class="token number">0xad678846</span><span class="token punctuation">,</span> <span class="token number">0xda60b8d0</span><span class="token punctuation">,</span>
+  <span class="token number">0x44042d73</span><span class="token punctuation">,</span> <span class="token number">0x33031de5</span><span class="token punctuation">,</span> <span class="token number">0xaa0a4c5f</span><span class="token punctuation">,</span> <span class="token number">0xdd0d7cc9</span><span class="token punctuation">,</span> <span class="token number">0x5005713c</span><span class="token punctuation">,</span> <span class="token number">0x270241aa</span><span class="token punctuation">,</span>
+  <span class="token number">0xbe0b1010</span><span class="token punctuation">,</span> <span class="token number">0xc90c2086</span><span class="token punctuation">,</span> <span class="token number">0x5768b525</span><span class="token punctuation">,</span> <span class="token number">0x206f85b3</span><span class="token punctuation">,</span> <span class="token number">0xb966d409</span><span class="token punctuation">,</span> <span class="token number">0xce61e49f</span><span class="token punctuation">,</span>
+  <span class="token number">0x5edef90e</span><span class="token punctuation">,</span> <span class="token number">0x29d9c998</span><span class="token punctuation">,</span> <span class="token number">0xb0d09822</span><span class="token punctuation">,</span> <span class="token number">0xc7d7a8b4</span><span class="token punctuation">,</span> <span class="token number">0x59b33d17</span><span class="token punctuation">,</span> <span class="token number">0x2eb40d81</span><span class="token punctuation">,</span>
+  <span class="token number">0xb7bd5c3b</span><span class="token punctuation">,</span> <span class="token number">0xc0ba6cad</span><span class="token punctuation">,</span> <span class="token number">0xedb88320</span><span class="token punctuation">,</span> <span class="token number">0x9abfb3b6</span><span class="token punctuation">,</span> <span class="token number">0x03b6e20c</span><span class="token punctuation">,</span> <span class="token number">0x74b1d29a</span><span class="token punctuation">,</span>
+  <span class="token number">0xead54739</span><span class="token punctuation">,</span> <span class="token number">0x9dd277af</span><span class="token punctuation">,</span> <span class="token number">0x04db2615</span><span class="token punctuation">,</span> <span class="token number">0x73dc1683</span><span class="token punctuation">,</span> <span class="token number">0xe3630b12</span><span class="token punctuation">,</span> <span class="token number">0x94643b84</span><span class="token punctuation">,</span>
+  <span class="token number">0x0d6d6a3e</span><span class="token punctuation">,</span> <span class="token number">0x7a6a5aa8</span><span class="token punctuation">,</span> <span class="token number">0xe40ecf0b</span><span class="token punctuation">,</span> <span class="token number">0x9309ff9d</span><span class="token punctuation">,</span> <span class="token number">0x0a00ae27</span><span class="token punctuation">,</span> <span class="token number">0x7d079eb1</span><span class="token punctuation">,</span>
+  <span class="token number">0xf00f9344</span><span class="token punctuation">,</span> <span class="token number">0x8708a3d2</span><span class="token punctuation">,</span> <span class="token number">0x1e01f268</span><span class="token punctuation">,</span> <span class="token number">0x6906c2fe</span><span class="token punctuation">,</span> <span class="token number">0xf762575d</span><span class="token punctuation">,</span> <span class="token number">0x806567cb</span><span class="token punctuation">,</span>
+  <span class="token number">0x196c3671</span><span class="token punctuation">,</span> <span class="token number">0x6e6b06e7</span><span class="token punctuation">,</span> <span class="token number">0xfed41b76</span><span class="token punctuation">,</span> <span class="token number">0x89d32be0</span><span class="token punctuation">,</span> <span class="token number">0x10da7a5a</span><span class="token punctuation">,</span> <span class="token number">0x67dd4acc</span><span class="token punctuation">,</span>
+  <span class="token number">0xf9b9df6f</span><span class="token punctuation">,</span> <span class="token number">0x8ebeeff9</span><span class="token punctuation">,</span> <span class="token number">0x17b7be43</span><span class="token punctuation">,</span> <span class="token number">0x60b08ed5</span><span class="token punctuation">,</span> <span class="token number">0xd6d6a3e8</span><span class="token punctuation">,</span> <span class="token number">0xa1d1937e</span><span class="token punctuation">,</span>
+  <span class="token number">0x38d8c2c4</span><span class="token punctuation">,</span> <span class="token number">0x4fdff252</span><span class="token punctuation">,</span> <span class="token number">0xd1bb67f1</span><span class="token punctuation">,</span> <span class="token number">0xa6bc5767</span><span class="token punctuation">,</span> <span class="token number">0x3fb506dd</span><span class="token punctuation">,</span> <span class="token number">0x48b2364b</span><span class="token punctuation">,</span>
+  <span class="token number">0xd80d2bda</span><span class="token punctuation">,</span> <span class="token number">0xaf0a1b4c</span><span class="token punctuation">,</span> <span class="token number">0x36034af6</span><span class="token punctuation">,</span> <span class="token number">0x41047a60</span><span class="token punctuation">,</span> <span class="token number">0xdf60efc3</span><span class="token punctuation">,</span> <span class="token number">0xa867df55</span><span class="token punctuation">,</span>
+  <span class="token number">0x316e8eef</span><span class="token punctuation">,</span> <span class="token number">0x4669be79</span><span class="token punctuation">,</span> <span class="token number">0xcb61b38c</span><span class="token punctuation">,</span> <span class="token number">0xbc66831a</span><span class="token punctuation">,</span> <span class="token number">0x256fd2a0</span><span class="token punctuation">,</span> <span class="token number">0x5268e236</span><span class="token punctuation">,</span>
+  <span class="token number">0xcc0c7795</span><span class="token punctuation">,</span> <span class="token number">0xbb0b4703</span><span class="token punctuation">,</span> <span class="token number">0x220216b9</span><span class="token punctuation">,</span> <span class="token number">0x5505262f</span><span class="token punctuation">,</span> <span class="token number">0xc5ba3bbe</span><span class="token punctuation">,</span> <span class="token number">0xb2bd0b28</span><span class="token punctuation">,</span>
+  <span class="token number">0x2bb45a92</span><span class="token punctuation">,</span> <span class="token number">0x5cb36a04</span><span class="token punctuation">,</span> <span class="token number">0xc2d7ffa7</span><span class="token punctuation">,</span> <span class="token number">0xb5d0cf31</span><span class="token punctuation">,</span> <span class="token number">0x2cd99e8b</span><span class="token punctuation">,</span> <span class="token number">0x5bdeae1d</span><span class="token punctuation">,</span>
+  <span class="token number">0x9b64c2b0</span><span class="token punctuation">,</span> <span class="token number">0xec63f226</span><span class="token punctuation">,</span> <span class="token number">0x756aa39c</span><span class="token punctuation">,</span> <span class="token number">0x026d930a</span><span class="token punctuation">,</span> <span class="token number">0x9c0906a9</span><span class="token punctuation">,</span> <span class="token number">0xeb0e363f</span><span class="token punctuation">,</span>
+  <span class="token number">0x72076785</span><span class="token punctuation">,</span> <span class="token number">0x05005713</span><span class="token punctuation">,</span> <span class="token number">0x95bf4a82</span><span class="token punctuation">,</span> <span class="token number">0xe2b87a14</span><span class="token punctuation">,</span> <span class="token number">0x7bb12bae</span><span class="token punctuation">,</span> <span class="token number">0x0cb61b38</span><span class="token punctuation">,</span>
+  <span class="token number">0x92d28e9b</span><span class="token punctuation">,</span> <span class="token number">0xe5d5be0d</span><span class="token punctuation">,</span> <span class="token number">0x7cdcefb7</span><span class="token punctuation">,</span> <span class="token number">0x0bdbdf21</span><span class="token punctuation">,</span> <span class="token number">0x86d3d2d4</span><span class="token punctuation">,</span> <span class="token number">0xf1d4e242</span><span class="token punctuation">,</span>
+  <span class="token number">0x68ddb3f8</span><span class="token punctuation">,</span> <span class="token number">0x1fda836e</span><span class="token punctuation">,</span> <span class="token number">0x81be16cd</span><span class="token punctuation">,</span> <span class="token number">0xf6b9265b</span><span class="token punctuation">,</span> <span class="token number">0x6fb077e1</span><span class="token punctuation">,</span> <span class="token number">0x18b74777</span><span class="token punctuation">,</span>
+  <span class="token number">0x88085ae6</span><span class="token punctuation">,</span> <span class="token number">0xff0f6a70</span><span class="token punctuation">,</span> <span class="token number">0x66063bca</span><span class="token punctuation">,</span> <span class="token number">0x11010b5c</span><span class="token punctuation">,</span> <span class="token number">0x8f659eff</span><span class="token punctuation">,</span> <span class="token number">0xf862ae69</span><span class="token punctuation">,</span>
+  <span class="token number">0x616bffd3</span><span class="token punctuation">,</span> <span class="token number">0x166ccf45</span><span class="token punctuation">,</span> <span class="token number">0xa00ae278</span><span class="token punctuation">,</span> <span class="token number">0xd70dd2ee</span><span class="token punctuation">,</span> <span class="token number">0x4e048354</span><span class="token punctuation">,</span> <span class="token number">0x3903b3c2</span><span class="token punctuation">,</span>
+  <span class="token number">0xa7672661</span><span class="token punctuation">,</span> <span class="token number">0xd06016f7</span><span class="token punctuation">,</span> <span class="token number">0x4969474d</span><span class="token punctuation">,</span> <span class="token number">0x3e6e77db</span><span class="token punctuation">,</span> <span class="token number">0xaed16a4a</span><span class="token punctuation">,</span> <span class="token number">0xd9d65adc</span><span class="token punctuation">,</span>
+  <span class="token number">0x40df0b66</span><span class="token punctuation">,</span> <span class="token number">0x37d83bf0</span><span class="token punctuation">,</span> <span class="token number">0xa9bcae53</span><span class="token punctuation">,</span> <span class="token number">0xdebb9ec5</span><span class="token punctuation">,</span> <span class="token number">0x47b2cf7f</span><span class="token punctuation">,</span> <span class="token number">0x30b5ffe9</span><span class="token punctuation">,</span>
+  <span class="token number">0xbdbdf21c</span><span class="token punctuation">,</span> <span class="token number">0xcabac28a</span><span class="token punctuation">,</span> <span class="token number">0x53b39330</span><span class="token punctuation">,</span> <span class="token number">0x24b4a3a6</span><span class="token punctuation">,</span> <span class="token number">0xbad03605</span><span class="token punctuation">,</span> <span class="token number">0xcdd70693</span><span class="token punctuation">,</span>
+  <span class="token number">0x54de5729</span><span class="token punctuation">,</span> <span class="token number">0x23d967bf</span><span class="token punctuation">,</span> <span class="token number">0xb3667a2e</span><span class="token punctuation">,</span> <span class="token number">0xc4614ab8</span><span class="token punctuation">,</span> <span class="token number">0x5d681b02</span><span class="token punctuation">,</span> <span class="token number">0x2a6f2b94</span><span class="token punctuation">,</span>
+  <span class="token number">0xb40bbe37</span><span class="token punctuation">,</span> <span class="token number">0xc30c8ea1</span><span class="token punctuation">,</span> <span class="token number">0x5a05df1b</span><span class="token punctuation">,</span> <span class="token number">0x2d02ef8d</span><span class="token punctuation">,</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2016/12/15/%E7%AE%97%E6%B3%95%E8%AF%86%E5%88%AB%E4%B9%8BSha1/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>Prev</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+              2016-12-16 22:34:56
+            </span>
+            
+                  <span class="post-tags">
+                    <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                    
+                    <span class="span--tag mr-8">
+                      <a href="/tags/reverse/" title="reverse">
+                        #reverse
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2017/03/22/%E7%AE%97%E6%B3%95%E8%AF%86%E5%88%AB%E4%B9%8BRC4/" target="_self">
+                <span>Next</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+
+    
+      <div class="comments-container">
+        
+
+
+  <div id="disqus_thread"></div>
+  <script>
+    /**
+    *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+    *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+    /*
+    var disqus_config = function () {
+    this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+    this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+    */
+    (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = 'https://smallsun107.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          <a title="github" target="_blank" rel="noopener" href="https://github.com/smallsun107">
+            <i class="iconfont icon-github"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a title="rss" href="/atom.xml">
+            <i class="iconfont icon-rss"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        Copyright © 2022 smallsun
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        Theme by Oranges | Powered by Hexo
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+          本站总访问量<span id="busuanzi_value_site_pv"></span>次
+        
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+          本站访客数<span id="busuanzi_value_site_uv"></span>人
+        
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+  <div class="search-icon tools-bar-item" id="search-icon">
+    <a href="javascript: void(0)">
+      <i class="iconfont icon-search"></i>
+    </a>
+  </div>
+
+  <div class="search-overlay hidden">
+    <div class="search-content" tabindex="0">
+      <div class="search-title">
+        <span class="search-icon-input">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-search"></i>
+          </a>
+        </span>
+        
+          <input type="text" class="search-input" id="search-input" placeholder="Search...">
+        
+        <span class="search-close-icon" id="search-close-icon">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-close"></i>
+          </a>
+        </span>
+      </div>
+      <div class="search-result" id="search-result"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var inputArea = document.querySelector("#search-input")
+    var searchOverlayArea = document.querySelector(".search-overlay")
+
+    inputArea.onclick = function() {
+      getSearchFile()
+      this.onclick = null
+    }
+
+    inputArea.onkeydown = function() {
+      if(event.keyCode == 13)
+        return false
+    }
+
+    function openOrHideSearchContent() {
+      let isHidden = searchOverlayArea.classList.contains('hidden')
+      if (isHidden) {
+        searchOverlayArea.classList.remove('hidden')
+        document.body.classList.add('hidden')
+        // inputArea.focus()
+      } else {
+        searchOverlayArea.classList.add('hidden')
+        document.body.classList.remove('hidden')
+      }
+    }
+
+    function blurSearchContent(e) {
+      if (e.target === searchOverlayArea) {
+        openOrHideSearchContent()
+      }
+    }
+
+    document.querySelector("#search-icon").addEventListener("click", openOrHideSearchContent, false)
+    document.querySelector("#search-close-icon").addEventListener("click", openOrHideSearchContent, false)
+    searchOverlayArea.addEventListener("click", blurSearchContent, false)
+
+    var searchFunc = function (path, search_id, content_id) {
+      'use strict';
+      var $input = document.getElementById(search_id);
+      var $resultContent = document.getElementById(content_id);
+      $resultContent.innerHTML = "<ul><span class='local-search-empty'>First search, index file loading, please wait...<span></ul>";
+      $.ajax({
+        // 0x01. load xml file
+        url: path,
+        dataType: "xml",
+        success: function (xmlResponse) {
+          // 0x02. parse xml file
+          var datas = $("entry", xmlResponse).map(function () {
+            return {
+              title: $("title", this).text(),
+              content: $("content", this).text(),
+              url: $("url", this).text()
+            };
+          }).get();
+          $resultContent.innerHTML = "";
+
+          $input.addEventListener('input', function () {
+            // 0x03. parse query to keywords list
+            var str = '<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length <= 0) {
+              return;
+            }
+            // 0x04. perform local searching
+            datas.forEach(function (data) {
+              var isMatch = true;
+              var content_index = [];
+              if (!data.title || data.title.trim() === '') {
+                data.title = "Untitled";
+              }
+              var orig_data_title = data.title.trim();
+              var data_title = orig_data_title.toLowerCase();
+              var orig_data_content = data.content.trim().replace(/<[^>]+>/g, "");
+              var data_content = orig_data_content.toLowerCase();
+              var data_url = data.url;
+              var index_title = -1;
+              var index_content = -1;
+              var first_occur = -1;
+              // only match artiles with not empty contents
+              if (data_content !== '') {
+                keywords.forEach(function (keyword, i) {
+                  index_title = data_title.indexOf(keyword);
+                  index_content = data_content.indexOf(keyword);
+
+                  if (index_title < 0 && index_content < 0) {
+                    isMatch = false;
+                  } else {
+                    if (index_content < 0) {
+                      index_content = 0;
+                    }
+                    if (i == 0) {
+                      first_occur = index_content;
+                    }
+                    // content_index.push({index_content:index_content, keyword_len:keyword_len});
+                  }
+                });
+              } else {
+                isMatch = false;
+              }
+              // 0x05. show search results
+              if (isMatch) {
+                str += "<li><a href='" + data_url + "' class='search-result-title'>" + orig_data_title + "</a>";
+                var content = orig_data_content;
+                if (first_occur >= 0) {
+                  // cut out 100 characters
+                  var start = first_occur - 20;
+                  var end = first_occur + 80;
+
+                  if (start < 0) {
+                    start = 0;
+                  }
+
+                  if (start == 0) {
+                    end = 100;
+                  }
+
+                  if (end > content.length) {
+                    end = content.length;
+                  }
+
+                  var match_content = content.substr(start, end);
+
+                  // highlight all keywords
+                  keywords.forEach(function (keyword) {
+                    var regS = new RegExp(keyword, "gi");
+                    match_content = match_content.replace(regS, "<span class=\"search-keyword\">" + keyword + "</span>");
+                  });
+
+                  str += "<p class=\"search-result-abstract\">" + match_content + "...</p>"
+                }
+                str += "</li>";
+              }
+            });
+            str += "</ul>";
+            if (str.indexOf('<li>') === -1) {
+              return $resultContent.innerHTML = "<ul><span class='local-search-empty'>No result<span></ul>";
+            }
+            $resultContent.innerHTML = str;
+          });
+        },
+        error: function(xhr, status, error) {
+          $resultContent.innerHTML = ""
+          if (xhr.status === 404) {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The search.xml file was not found, please refer to：<a href='https://github.com/zchengsite/hexo-theme-oranges#configuration' target='_black'>configuration</a><span></ul>";
+          } else {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The request failed, Try to refresh the page or try again later.<span></ul>";
+          }
+        }
+      });
+      $(document).on('click', '#search-close-icon', function() {
+        $('#search-input').val('');
+        $('#search-result').html('');
+      });
+    }
+
+    var getSearchFile = function() {
+        var path = "/search.xml";
+        searchFunc(path, 'search-input', 'search-result');
+    }
+  </script>
+
+
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + %E7%AE%97%E6%B3%95%E8%AF%86%E5%88%AB%E4%B9%8BCRC + '&url=' + https%3A%2F%2Fblog.smallsun.online%2F2016%2F12%2F16%2F%25E7%25AE%2597%25E6%25B3%2595%25E8%25AF%2586%25E5%2588%25AB%25E4%25B9%258BCRC%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://blog.smallsun.online/2016/12/16/%E7%AE%97%E6%B3%95%E8%AF%86%E5%88%AB%E4%B9%8BCRC/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>

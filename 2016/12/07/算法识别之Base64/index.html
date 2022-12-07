@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="keywords" content="逆向,网络安全,系统安全,Windows,Android,iOS,Reverse" />
+  <meta name="author" content="smallsun" />
+  <meta name="description" content="it&#39;s my life." />
+  
+  
+  <title>
+    
+      算法识别之Base64 
+      
+      
+      |
+    
+     smallsun&#39;s Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+    <link rel="icon" href="/images/favicon.png">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-245031966-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-245031966-1');
+    </script>
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 6.2.0"><link rel="alternate" href="/atom.xml" title="smallsun's Blog" type="application/atom+xml">
+</head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/avatar.png" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">smallsun</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/">
+          <a href="/">Home</a>
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          <a href="/tags/">Tags</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">算法识别之Base64</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+          2016-12-07 21:12:25
+        </span>
+        
+              <span class="post-tags">
+                <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                
+                <span class="span--tag mr-8">
+                  <a href="/tags/reverse/" title="reverse">
+                    #reverse
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <h2 id="Base64简介"><a href="#Base64简介" class="headerlink" title="Base64简介"></a>Base64简介</h2><blockquote>
+<p>Base64 是一种基于 64 个可打印字符来表示二进制数据的表示方法。由于 2^6&#x3D;64，所以每 6 个比特为一个单元，对应某个可打印字符。&gt; 3 个字节有 24 个比特，对应于 4 个 Base64 单元，即 3 个字节可由 4 个可打印字符来表示。<br>——维基百科<br>它不是一种加解密技术，只是一种简单的编解码技术。Base64 常用于表示、传输、存储二进制数据，也可以用于将一些含有特殊字符的文本内容编码，以便传输。特征是最后面可能有&#x3D;，同时编码只有a-zA-Z0-9+&#x2F;字符</p>
+</blockquote>
+<h2 id="实例分析"><a href="#实例分析" class="headerlink" title="实例分析"></a>实例分析</h2><p>base64 C实现代码如下</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">"base64.h"</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+
+<span class="token comment">/**
+ *  转解码过程
+ *  3 * 8 = 4 * 6; 3字节占24位, 4*6=24
+ *  先将要编码的转成对应的ASCII值
+ *  如编码: s 1 3
+ *  对应ASCII值为: 115 49 51
+ *  对应二进制为: 01110011 00110001 00110011
+ *  将其6个分组分4组: 011100 110011 000100 110011
+ *  而计算机是以8bit存储, 所以在每组的高位补两个0如下:
+ *  00011100 00110011 00000100 00110011对应:28 51 4 51
+ *  查找base64 转换表 对应 c z E z
+ *
+ *  解码
+ *  c z E z
+ *  对应ASCII值为 99 122 69 122
+ *  对应表base64_suffix_map的值为 28 51 4 51
+ *  对应二进制值为 00011100 00110011 00000100 00110011
+ *  依次去除每组的前两位, 再拼接成3字节
+ *  即: 01110011 00110001 00110011
+ *  对应的就是s 1 3
+ */</span>
+
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">BASE64_PAD</span> <span class="token char">'='</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">BASE64DE_FIRST</span> <span class="token char">'+'</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">BASE64DE_LAST</span> <span class="token char">'z'</span></span>
+
+<span class="token comment">/* BASE 64 encode table */</span>
+<span class="token keyword">static</span> <span class="token keyword">const</span> <span class="token keyword">char</span> base64en<span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">&#123;</span>
+        <span class="token char">'A'</span><span class="token punctuation">,</span> <span class="token char">'B'</span><span class="token punctuation">,</span> <span class="token char">'C'</span><span class="token punctuation">,</span> <span class="token char">'D'</span><span class="token punctuation">,</span> <span class="token char">'E'</span><span class="token punctuation">,</span> <span class="token char">'F'</span><span class="token punctuation">,</span> <span class="token char">'G'</span><span class="token punctuation">,</span> <span class="token char">'H'</span><span class="token punctuation">,</span>
+        <span class="token char">'I'</span><span class="token punctuation">,</span> <span class="token char">'J'</span><span class="token punctuation">,</span> <span class="token char">'K'</span><span class="token punctuation">,</span> <span class="token char">'L'</span><span class="token punctuation">,</span> <span class="token char">'M'</span><span class="token punctuation">,</span> <span class="token char">'N'</span><span class="token punctuation">,</span> <span class="token char">'O'</span><span class="token punctuation">,</span> <span class="token char">'P'</span><span class="token punctuation">,</span>
+        <span class="token char">'Q'</span><span class="token punctuation">,</span> <span class="token char">'R'</span><span class="token punctuation">,</span> <span class="token char">'S'</span><span class="token punctuation">,</span> <span class="token char">'T'</span><span class="token punctuation">,</span> <span class="token char">'U'</span><span class="token punctuation">,</span> <span class="token char">'V'</span><span class="token punctuation">,</span> <span class="token char">'W'</span><span class="token punctuation">,</span> <span class="token char">'X'</span><span class="token punctuation">,</span>
+        <span class="token char">'Y'</span><span class="token punctuation">,</span> <span class="token char">'Z'</span><span class="token punctuation">,</span> <span class="token char">'a'</span><span class="token punctuation">,</span> <span class="token char">'b'</span><span class="token punctuation">,</span> <span class="token char">'c'</span><span class="token punctuation">,</span> <span class="token char">'d'</span><span class="token punctuation">,</span> <span class="token char">'e'</span><span class="token punctuation">,</span> <span class="token char">'f'</span><span class="token punctuation">,</span>
+        <span class="token char">'g'</span><span class="token punctuation">,</span> <span class="token char">'h'</span><span class="token punctuation">,</span> <span class="token char">'i'</span><span class="token punctuation">,</span> <span class="token char">'j'</span><span class="token punctuation">,</span> <span class="token char">'k'</span><span class="token punctuation">,</span> <span class="token char">'l'</span><span class="token punctuation">,</span> <span class="token char">'m'</span><span class="token punctuation">,</span> <span class="token char">'n'</span><span class="token punctuation">,</span>
+        <span class="token char">'o'</span><span class="token punctuation">,</span> <span class="token char">'p'</span><span class="token punctuation">,</span> <span class="token char">'q'</span><span class="token punctuation">,</span> <span class="token char">'r'</span><span class="token punctuation">,</span> <span class="token char">'s'</span><span class="token punctuation">,</span> <span class="token char">'t'</span><span class="token punctuation">,</span> <span class="token char">'u'</span><span class="token punctuation">,</span> <span class="token char">'v'</span><span class="token punctuation">,</span>
+        <span class="token char">'w'</span><span class="token punctuation">,</span> <span class="token char">'x'</span><span class="token punctuation">,</span> <span class="token char">'y'</span><span class="token punctuation">,</span> <span class="token char">'z'</span><span class="token punctuation">,</span> <span class="token char">'0'</span><span class="token punctuation">,</span> <span class="token char">'1'</span><span class="token punctuation">,</span> <span class="token char">'2'</span><span class="token punctuation">,</span> <span class="token char">'3'</span><span class="token punctuation">,</span>
+        <span class="token char">'4'</span><span class="token punctuation">,</span> <span class="token char">'5'</span><span class="token punctuation">,</span> <span class="token char">'6'</span><span class="token punctuation">,</span> <span class="token char">'7'</span><span class="token punctuation">,</span> <span class="token char">'8'</span><span class="token punctuation">,</span> <span class="token char">'9'</span><span class="token punctuation">,</span> <span class="token char">'+'</span><span class="token punctuation">,</span> <span class="token char">'/'</span><span class="token punctuation">,</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+
+<span class="token comment">/* ASCII order for BASE 64 decode, 255 in unused character */</span>
+<span class="token keyword">static</span> <span class="token keyword">const</span> <span class="token keyword">unsigned</span> <span class="token keyword">char</span> base64de<span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">/* nul, soh, stx, etx, eot, enq, ack, bel, */</span>
+        <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/*  bs,  ht,  nl,  vt,  np,  cr,  so,  si, */</span>
+        <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* dle, dc1, dc2, dc3, dc4, nak, syn, etb, */</span>
+        <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* can,  em, sub, esc,  fs,  gs,  rs,  us, */</span>
+        <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/*  sp, '!', '"', '#', '$', '%', '&amp;', ''', */</span>
+        <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* '(', ')', '*', '+', ',', '-', '.', '/', */</span>
+        <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span>  <span class="token number">62</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span>  <span class="token number">63</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* '0', '1', '2', '3', '4', '5', '6', '7', */</span>
+        <span class="token number">52</span><span class="token punctuation">,</span>  <span class="token number">53</span><span class="token punctuation">,</span>  <span class="token number">54</span><span class="token punctuation">,</span>  <span class="token number">55</span><span class="token punctuation">,</span>  <span class="token number">56</span><span class="token punctuation">,</span>  <span class="token number">57</span><span class="token punctuation">,</span>  <span class="token number">58</span><span class="token punctuation">,</span>  <span class="token number">59</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* '8', '9', ':', ';', '&lt;', '=', '>', '?', */</span>
+        <span class="token number">60</span><span class="token punctuation">,</span>  <span class="token number">61</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', */</span>
+        <span class="token number">255</span><span class="token punctuation">,</span>   <span class="token number">0</span><span class="token punctuation">,</span>   <span class="token number">1</span><span class="token punctuation">,</span>  <span class="token number">2</span><span class="token punctuation">,</span>   <span class="token number">3</span><span class="token punctuation">,</span>   <span class="token number">4</span><span class="token punctuation">,</span>   <span class="token number">5</span><span class="token punctuation">,</span>    <span class="token number">6</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', */</span>
+        <span class="token number">7</span><span class="token punctuation">,</span>   <span class="token number">8</span><span class="token punctuation">,</span>   <span class="token number">9</span><span class="token punctuation">,</span>  <span class="token number">10</span><span class="token punctuation">,</span>  <span class="token number">11</span><span class="token punctuation">,</span>  <span class="token number">12</span><span class="token punctuation">,</span>  <span class="token number">13</span><span class="token punctuation">,</span>  <span class="token number">14</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', */</span>
+        <span class="token number">15</span><span class="token punctuation">,</span>  <span class="token number">16</span><span class="token punctuation">,</span>  <span class="token number">17</span><span class="token punctuation">,</span>  <span class="token number">18</span><span class="token punctuation">,</span>  <span class="token number">19</span><span class="token punctuation">,</span>  <span class="token number">20</span><span class="token punctuation">,</span>  <span class="token number">21</span><span class="token punctuation">,</span>  <span class="token number">22</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* 'X', 'Y', 'Z', '[', '\', ']', '^', '_', */</span>
+        <span class="token number">23</span><span class="token punctuation">,</span>  <span class="token number">24</span><span class="token punctuation">,</span>  <span class="token number">25</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', */</span>
+        <span class="token number">255</span><span class="token punctuation">,</span>  <span class="token number">26</span><span class="token punctuation">,</span>  <span class="token number">27</span><span class="token punctuation">,</span>  <span class="token number">28</span><span class="token punctuation">,</span>  <span class="token number">29</span><span class="token punctuation">,</span>  <span class="token number">30</span><span class="token punctuation">,</span>  <span class="token number">31</span><span class="token punctuation">,</span>  <span class="token number">32</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', */</span>
+        <span class="token number">33</span><span class="token punctuation">,</span>  <span class="token number">34</span><span class="token punctuation">,</span>  <span class="token number">35</span><span class="token punctuation">,</span>  <span class="token number">36</span><span class="token punctuation">,</span>  <span class="token number">37</span><span class="token punctuation">,</span>  <span class="token number">38</span><span class="token punctuation">,</span>  <span class="token number">39</span><span class="token punctuation">,</span>  <span class="token number">40</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', */</span>
+        <span class="token number">41</span><span class="token punctuation">,</span>  <span class="token number">42</span><span class="token punctuation">,</span>  <span class="token number">43</span><span class="token punctuation">,</span>  <span class="token number">44</span><span class="token punctuation">,</span>  <span class="token number">45</span><span class="token punctuation">,</span>  <span class="token number">46</span><span class="token punctuation">,</span>  <span class="token number">47</span><span class="token punctuation">,</span>  <span class="token number">48</span><span class="token punctuation">,</span>
+
+        <span class="token comment">/* 'x', 'y', 'z', '&#123;', '|', '&#125;', '~', del, */</span>
+        <span class="token number">49</span><span class="token punctuation">,</span>  <span class="token number">50</span><span class="token punctuation">,</span>  <span class="token number">51</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">255</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+
+<span class="token keyword">unsigned</span> <span class="token keyword">int</span>
+<span class="token function">base64_encode</span><span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span>in<span class="token punctuation">,</span> <span class="token keyword">unsigned</span> <span class="token keyword">int</span> inlen<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>out<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">int</span> s<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">int</span> i<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">int</span> j<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">char</span> c<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">char</span> l<span class="token punctuation">;</span>
+
+    s <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    l <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> j <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> inlen<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        c <span class="token operator">=</span> in<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">switch</span> <span class="token punctuation">(</span>s<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">case</span> <span class="token number">0</span><span class="token operator">:</span>
+                s <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+                out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">=</span> base64en<span class="token punctuation">[</span><span class="token punctuation">(</span>c <span class="token operator">>></span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span> <span class="token number">0x3F</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+                <span class="token keyword">break</span><span class="token punctuation">;</span>
+            <span class="token keyword">case</span> <span class="token number">1</span><span class="token operator">:</span>
+                s <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">;</span>
+                out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">=</span> base64en<span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token punctuation">(</span>l <span class="token operator">&amp;</span> <span class="token number">0x3</span><span class="token punctuation">)</span> <span class="token operator">&lt;&lt;</span> <span class="token number">4</span><span class="token punctuation">)</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>c <span class="token operator">>></span> <span class="token number">4</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span> <span class="token number">0xF</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+                <span class="token keyword">break</span><span class="token punctuation">;</span>
+            <span class="token keyword">case</span> <span class="token number">2</span><span class="token operator">:</span>
+                s <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+                out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">=</span> base64en<span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token punctuation">(</span>l <span class="token operator">&amp;</span> <span class="token number">0xF</span><span class="token punctuation">)</span> <span class="token operator">&lt;&lt;</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>c <span class="token operator">>></span> <span class="token number">6</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span> <span class="token number">0x3</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+                out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">=</span> base64en<span class="token punctuation">[</span>c <span class="token operator">&amp;</span> <span class="token number">0x3F</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+                <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        l <span class="token operator">=</span> c<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">switch</span> <span class="token punctuation">(</span>s<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">case</span> <span class="token number">1</span><span class="token operator">:</span>
+            out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">=</span> base64en<span class="token punctuation">[</span><span class="token punctuation">(</span>l <span class="token operator">&amp;</span> <span class="token number">0x3</span><span class="token punctuation">)</span> <span class="token operator">&lt;&lt;</span> <span class="token number">4</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+            out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">=</span> BASE64_PAD<span class="token punctuation">;</span>
+            out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">=</span> BASE64_PAD<span class="token punctuation">;</span>
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">case</span> <span class="token number">2</span><span class="token operator">:</span>
+            out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">=</span> base64en<span class="token punctuation">[</span><span class="token punctuation">(</span>l <span class="token operator">&amp;</span> <span class="token number">0xF</span><span class="token punctuation">)</span> <span class="token operator">&lt;&lt;</span> <span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+            out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">=</span> BASE64_PAD<span class="token punctuation">;</span>
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    out<span class="token punctuation">[</span>j<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">return</span> j<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">unsigned</span> <span class="token keyword">int</span>
+<span class="token function">base64_decode</span><span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span>in<span class="token punctuation">,</span> <span class="token keyword">unsigned</span> <span class="token keyword">int</span> inlen<span class="token punctuation">,</span> <span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span>out<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">int</span> i<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">int</span> j<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">char</span> c<span class="token punctuation">;</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>inlen <span class="token operator">&amp;</span> <span class="token number">0x3</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> j <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> inlen<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>in<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">==</span> BASE64_PAD<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>in<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">&lt;</span> BASE64DE_FIRST <span class="token operator">||</span> in<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">></span> BASE64DE_LAST<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+
+        c <span class="token operator">=</span> base64de<span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">char</span><span class="token punctuation">)</span>in<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>c <span class="token operator">==</span> <span class="token number">255</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+
+        <span class="token keyword">switch</span> <span class="token punctuation">(</span>i <span class="token operator">&amp;</span> <span class="token number">0x3</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">case</span> <span class="token number">0</span><span class="token operator">:</span>
+                out<span class="token punctuation">[</span>j<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">(</span>c <span class="token operator">&lt;&lt;</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span> <span class="token number">0xFF</span><span class="token punctuation">;</span>
+                <span class="token keyword">break</span><span class="token punctuation">;</span>
+            <span class="token keyword">case</span> <span class="token number">1</span><span class="token operator">:</span>
+                out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">|=</span> <span class="token punctuation">(</span>c <span class="token operator">>></span> <span class="token number">4</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span> <span class="token number">0x3</span><span class="token punctuation">;</span>
+                out<span class="token punctuation">[</span>j<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">(</span>c <span class="token operator">&amp;</span> <span class="token number">0xF</span><span class="token punctuation">)</span> <span class="token operator">&lt;&lt;</span> <span class="token number">4</span><span class="token punctuation">;</span>
+                <span class="token keyword">break</span><span class="token punctuation">;</span>
+            <span class="token keyword">case</span> <span class="token number">2</span><span class="token operator">:</span>
+                out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">|=</span> <span class="token punctuation">(</span>c <span class="token operator">>></span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span> <span class="token number">0xF</span><span class="token punctuation">;</span>
+                out<span class="token punctuation">[</span>j<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">(</span>c <span class="token operator">&amp;</span> <span class="token number">0x3</span><span class="token punctuation">)</span> <span class="token operator">&lt;&lt;</span> <span class="token number">6</span><span class="token punctuation">;</span>
+                <span class="token keyword">break</span><span class="token punctuation">;</span>
+            <span class="token keyword">case</span> <span class="token number">3</span><span class="token operator">:</span>
+                out<span class="token punctuation">[</span>j<span class="token operator">++</span><span class="token punctuation">]</span> <span class="token operator">|=</span> c<span class="token punctuation">;</span>
+                <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">return</span> j<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">BASE64_ENCODE_OUT_SIZE</span><span class="token expression"><span class="token punctuation">(</span>s<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">(</span>s<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token number">3</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">4</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">BASE64_DECODE_OUT_SIZE</span><span class="token expression"><span class="token punctuation">(</span>s<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">(</span>s<span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token number">4</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">)</span></span></span>
+
+<span class="token comment">/*
+ * out is null-terminated encode string.
+ * return values is out length, exclusive terminating `\0'
+ */</span>
+<span class="token keyword">unsigned</span> <span class="token keyword">int</span>
+<span class="token function">base64_encode</span><span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span>in<span class="token punctuation">,</span> <span class="token keyword">unsigned</span> <span class="token keyword">int</span> inlen<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>out<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token comment">/*
+ * return values is out length
+ */</span>
+<span class="token keyword">unsigned</span> <span class="token keyword">int</span>
+<span class="token function">base64_decode</span><span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span>in<span class="token punctuation">,</span> <span class="token keyword">unsigned</span> <span class="token keyword">int</span> inlen<span class="token punctuation">,</span> <span class="token keyword">unsigned</span> <span class="token keyword">char</span> <span class="token operator">*</span>out<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>编译一个bin出来，base64比较简单就不调试了，直接使用IDA静态分析<br>解码函数</p>
+<img src="/2016/12/07/%E7%AE%97%E6%B3%95%E8%AF%86%E5%88%AB%E4%B9%8BBase64/base64_1.jpg" class="">
+<p>编码函数</p>
+<img src="/2016/12/07/%E7%AE%97%E6%B3%95%E8%AF%86%E5%88%AB%E4%B9%8BBase64/base64_2.jpg" class="">
+<p>看一眼伪代码，可以很明显的看见Base64使用的两张表，可以拷贝出来与原始Base64表进行对比，判断是否使用了Base64编码。</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2016/12/06/%E9%80%86%E5%90%91%E7%AC%94%E8%AE%B0-%E5%85%AB/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>Prev</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="Update time"></i>
+              2016-12-07 21:12:25
+            </span>
+            
+                  <span class="post-tags">
+                    <i class="iconfont icon-tags mr-10" title="Tags"></i>
+                    
+                    <span class="span--tag mr-8">
+                      <a href="/tags/reverse/" title="reverse">
+                        #reverse
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2016/12/08/%E7%AE%97%E6%B3%95%E8%AF%86%E5%88%AB%E4%B9%8BMD5/" target="_self">
+                <span>Next</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">Contents</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Base64%E7%AE%80%E4%BB%8B"><span class="toc-text">Base64简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90"><span class="toc-text">实例分析</span></a></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+  <div id="disqus_thread"></div>
+  <script>
+    /**
+    *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+    *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+    /*
+    var disqus_config = function () {
+    this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+    this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+    */
+    (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = 'https://smallsun107.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          <a title="github" target="_blank" rel="noopener" href="https://github.com/smallsun107">
+            <i class="iconfont icon-github"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a title="rss" href="/atom.xml">
+            <i class="iconfont icon-rss"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        Copyright © 2022 smallsun
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        Theme by Oranges | Powered by Hexo
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+          本站总访问量<span id="busuanzi_value_site_pv"></span>次
+        
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+          本站访客数<span id="busuanzi_value_site_uv"></span>人
+        
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+  <div class="search-icon tools-bar-item" id="search-icon">
+    <a href="javascript: void(0)">
+      <i class="iconfont icon-search"></i>
+    </a>
+  </div>
+
+  <div class="search-overlay hidden">
+    <div class="search-content" tabindex="0">
+      <div class="search-title">
+        <span class="search-icon-input">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-search"></i>
+          </a>
+        </span>
+        
+          <input type="text" class="search-input" id="search-input" placeholder="Search...">
+        
+        <span class="search-close-icon" id="search-close-icon">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-close"></i>
+          </a>
+        </span>
+      </div>
+      <div class="search-result" id="search-result"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var inputArea = document.querySelector("#search-input")
+    var searchOverlayArea = document.querySelector(".search-overlay")
+
+    inputArea.onclick = function() {
+      getSearchFile()
+      this.onclick = null
+    }
+
+    inputArea.onkeydown = function() {
+      if(event.keyCode == 13)
+        return false
+    }
+
+    function openOrHideSearchContent() {
+      let isHidden = searchOverlayArea.classList.contains('hidden')
+      if (isHidden) {
+        searchOverlayArea.classList.remove('hidden')
+        document.body.classList.add('hidden')
+        // inputArea.focus()
+      } else {
+        searchOverlayArea.classList.add('hidden')
+        document.body.classList.remove('hidden')
+      }
+    }
+
+    function blurSearchContent(e) {
+      if (e.target === searchOverlayArea) {
+        openOrHideSearchContent()
+      }
+    }
+
+    document.querySelector("#search-icon").addEventListener("click", openOrHideSearchContent, false)
+    document.querySelector("#search-close-icon").addEventListener("click", openOrHideSearchContent, false)
+    searchOverlayArea.addEventListener("click", blurSearchContent, false)
+
+    var searchFunc = function (path, search_id, content_id) {
+      'use strict';
+      var $input = document.getElementById(search_id);
+      var $resultContent = document.getElementById(content_id);
+      $resultContent.innerHTML = "<ul><span class='local-search-empty'>First search, index file loading, please wait...<span></ul>";
+      $.ajax({
+        // 0x01. load xml file
+        url: path,
+        dataType: "xml",
+        success: function (xmlResponse) {
+          // 0x02. parse xml file
+          var datas = $("entry", xmlResponse).map(function () {
+            return {
+              title: $("title", this).text(),
+              content: $("content", this).text(),
+              url: $("url", this).text()
+            };
+          }).get();
+          $resultContent.innerHTML = "";
+
+          $input.addEventListener('input', function () {
+            // 0x03. parse query to keywords list
+            var str = '<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length <= 0) {
+              return;
+            }
+            // 0x04. perform local searching
+            datas.forEach(function (data) {
+              var isMatch = true;
+              var content_index = [];
+              if (!data.title || data.title.trim() === '') {
+                data.title = "Untitled";
+              }
+              var orig_data_title = data.title.trim();
+              var data_title = orig_data_title.toLowerCase();
+              var orig_data_content = data.content.trim().replace(/<[^>]+>/g, "");
+              var data_content = orig_data_content.toLowerCase();
+              var data_url = data.url;
+              var index_title = -1;
+              var index_content = -1;
+              var first_occur = -1;
+              // only match artiles with not empty contents
+              if (data_content !== '') {
+                keywords.forEach(function (keyword, i) {
+                  index_title = data_title.indexOf(keyword);
+                  index_content = data_content.indexOf(keyword);
+
+                  if (index_title < 0 && index_content < 0) {
+                    isMatch = false;
+                  } else {
+                    if (index_content < 0) {
+                      index_content = 0;
+                    }
+                    if (i == 0) {
+                      first_occur = index_content;
+                    }
+                    // content_index.push({index_content:index_content, keyword_len:keyword_len});
+                  }
+                });
+              } else {
+                isMatch = false;
+              }
+              // 0x05. show search results
+              if (isMatch) {
+                str += "<li><a href='" + data_url + "' class='search-result-title'>" + orig_data_title + "</a>";
+                var content = orig_data_content;
+                if (first_occur >= 0) {
+                  // cut out 100 characters
+                  var start = first_occur - 20;
+                  var end = first_occur + 80;
+
+                  if (start < 0) {
+                    start = 0;
+                  }
+
+                  if (start == 0) {
+                    end = 100;
+                  }
+
+                  if (end > content.length) {
+                    end = content.length;
+                  }
+
+                  var match_content = content.substr(start, end);
+
+                  // highlight all keywords
+                  keywords.forEach(function (keyword) {
+                    var regS = new RegExp(keyword, "gi");
+                    match_content = match_content.replace(regS, "<span class=\"search-keyword\">" + keyword + "</span>");
+                  });
+
+                  str += "<p class=\"search-result-abstract\">" + match_content + "...</p>"
+                }
+                str += "</li>";
+              }
+            });
+            str += "</ul>";
+            if (str.indexOf('<li>') === -1) {
+              return $resultContent.innerHTML = "<ul><span class='local-search-empty'>No result<span></ul>";
+            }
+            $resultContent.innerHTML = str;
+          });
+        },
+        error: function(xhr, status, error) {
+          $resultContent.innerHTML = ""
+          if (xhr.status === 404) {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The search.xml file was not found, please refer to：<a href='https://github.com/zchengsite/hexo-theme-oranges#configuration' target='_black'>configuration</a><span></ul>";
+          } else {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>The request failed, Try to refresh the page or try again later.<span></ul>";
+          }
+        }
+      });
+      $(document).on('click', '#search-close-icon', function() {
+        $('#search-input').val('');
+        $('#search-result').html('');
+      });
+    }
+
+    var getSearchFile = function() {
+        var path = "/search.xml";
+        searchFunc(path, 'search-input', 'search-result');
+    }
+  </script>
+
+
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + %E7%AE%97%E6%B3%95%E8%AF%86%E5%88%AB%E4%B9%8BBase64 + '&url=' + https%3A%2F%2Fblog.smallsun.online%2F2016%2F12%2F07%2F%25E7%25AE%2597%25E6%25B3%2595%25E8%25AF%2586%25E5%2588%25AB%25E4%25B9%258BBase64%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=https://blog.smallsun.online/2016/12/07/%E7%AE%97%E6%B3%95%E8%AF%86%E5%88%AB%E4%B9%8BBase64/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
